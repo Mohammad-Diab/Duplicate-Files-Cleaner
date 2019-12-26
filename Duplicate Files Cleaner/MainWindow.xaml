@@ -14,7 +14,7 @@
             <Grid.BitmapEffect>
                 <BlurBitmapEffect x:Name="blur" Radius="1"/>
             </Grid.BitmapEffect>
-
+            <Grid Background="Black" Margin="0,0,0,0" Height="36" VerticalAlignment="Top"></Grid>
             <StackPanel x:Name="tab_panal" Height="36" VerticalAlignment="Top" Orientation="Horizontal" Background="Black">
                 <Label x:Name="label1" Content="FIND DUBLICTES" FontSize="18" Background="White" Cursor="Hand" PreviewMouseLeftButtonUp="TabChange_MouseButtonUp"/>
                 <Label x:Name="label2" Content="IS SIMILER TO" FontSize="18" Foreground="White" Background="Black" Cursor="Hand" PreviewMouseLeftButtonUp="TabChange_MouseButtonUp"/>
