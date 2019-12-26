@@ -1,0 +1,164 @@
+﻿<Window x:Class="Duplicate_Files_Cleaner.Settings"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Duplicate_Files_Cleaner"
+        mc:Ignorable="d"
+        Title="SETTINGS" Height="480" Width="400" MinWidth="400" MinHeight="448" MaxWidth="400" MaxHeight="8450" ResizeMode="CanMinimize" WindowStartupLocation="CenterScreen" Loaded="Window_Loaded">
+    <Window.Resources>
+        <Style x:Key="header_textblock" TargetType="{x:Type TextBlock}">
+            <Setter Property="FontFamily" Value="Segoe UI Light"/>
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="Foreground" Value="#FF646464"/>
+            <Setter Property="Margin" Value="0,0,0,0"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+            <Setter Property="VerticalAlignment" Value="Top"/>
+        </Style>
+    </Window.Resources>
+    <Grid>
+        <Rectangle>
+            <Rectangle.BitmapEffect>
+                <BlurBitmapEffect Radius="30"/>
+            </Rectangle.BitmapEffect>
+            <Rectangle.Fill>
+                <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                    <GradientStop Color="SkyBlue"/>
+                    <GradientStop Color="White" Offset="0.12"/>
+                </LinearGradientBrush>
+            </Rectangle.Fill>
+        </Rectangle>
+        <TextBlock FontFamily="Segoe UI Light" Margin="10,10" HorizontalAlignment="Left" FontSize="24" TextWrapping="Wrap" Text="Duplicate Files Cleaner Settings" VerticalAlignment="Top"/>
+        <ScrollViewer Margin="0,50">
+            <StackPanel>
+
+                <Grid Margin="10,0" VerticalAlignment="Top">
+                    <TextBlock Text="General" Style="{StaticResource header_textblock}"/>
+                    <ComboBox x:Name="language" HorizontalAlignment="Left" SelectedIndex="1" Width="157" Margin="89,28,0,0" Height="22" VerticalAlignment="Top">
+                        <ComboBoxItem Content="Arabic (العربية)" IsEnabled="False"/>
+                        <ComboBoxItem Content="English (English)"/>
+                    </ComboBox>
+                    <TextBlock HorizontalAlignment="Left" Margin="10,31,0,0" TextWrapping="Wrap" Text="Language" VerticalAlignment="Top"/>
+                    <TextBlock HorizontalAlignment="Left" Margin="10,60,0,0" TextWrapping="Wrap" Text="Buffer size" VerticalAlignment="Top"/>
+                    <Slider x:Name="buffer_slider" Margin="47,82,85,0" VerticalAlignment="Top" Minimum="1" Maximum="16" Value="0" SmallChange="1" LargeChange="1" TickFrequency="1" TickPlacement="BottomRight" IsSnapToTickEnabled="True" ValueChanged="BufferSlider_ValueChanged"/>
+                    <TextBlock x:Name="buffer_textblock" HorizontalAlignment="Right" Margin="0,82,5,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="70" TextAlignment="Center"/>
+
+                </Grid>
+
+                <StackPanel Margin="10" VerticalAlignment="Top">
+                    <TextBlock Text="File exploring setting" Margin="0,10,0,0" Style="{StaticResource header_textblock}"/>
+                    <CheckBox x:Name="system_files" Content="Exclude 'System' files." HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" IsChecked="True"/>
+                    <CheckBox x:Name="hidden_files" Content="Exclude 'Hidden' files." HorizontalAlignment="Left" Margin="10,5,0,0" VerticalAlignment="Top" IsChecked="True"/>
+                    <CheckBox x:Name="html_files" Content="Exclude files in 'HTML Documents Folder'" HorizontalAlignment="Left" Margin="10,5,0,0" VerticalAlignment="Top"/>
+                    <CheckBox x:Name="special_folder" Content="Exclude these Folders" HorizontalAlignment="Left" Margin="10,5,0,0" VerticalAlignment="Top" IsChecked="True"/>
+                    <Grid Margin="15,5,10,0" VerticalAlignment="Top">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <TextBox x:Name="special_folder_list" MaxHeight="300" Text="C:\Windows&#xD;&#xA;C:\Program Files&#xA;C:\Program Files (x86)&#xA;C:\ProgramData&#xA;C:\Users\DrMoh\AppData" Margin="0,5,75,0" VerticalAlignment="Top" FontSize="12" Background="Transparent" BorderBrush="Gray" BorderThickness="0,1" Grid.RowSpan="3" AcceptsReturn="True" MaxLines="20" VerticalScrollBarVisibility="Auto"/>
+                        <Button Content="Browse" Grid.Row="1" HorizontalAlignment="Right" VerticalAlignment="Top" Width="60" Background="Transparent" Click="Browse_Click" Height="20" Margin="0,0,10,0"/>
+                    </Grid>
+                </StackPanel>
+
+                <StackPanel Margin="10" VerticalAlignment="Top">
+                    <TextBlock Margin="0,10,0,10" Text="Scan quality" Style="{StaticResource header_textblock}"/>
+                    <RadioButton x:Name="do_full_scan" Margin="10,5,0,0" Content="Do a full files scan" HorizontalAlignment="Left" VerticalAlignment="Top" BorderBrush="#FF737575"/>
+                    <TextBlock Margin="15,5,10,0" TextWrapping="Wrap" VerticalAlignment="Top">
+                            <Run Text="This will compares"/>
+                            <Run Foreground="Green" Text="entire file"/>
+                            <Run Text="with other files it will be a "/>
+                            <Run Foreground="Red" Text="very slow" TextDecorations="Underline"/>
+                            <Run Text=" operation but you will be "/>
+                            <Run Foreground="Green" Text="100% sure"/>
+                            <Run Text="that all duplicate files are the same."/>
+                    </TextBlock>
+                    <RadioButton x:Name="smart_scan" Margin="10,15,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" BorderBrush="#FF737575" IsChecked="True">
+                        <TextBlock><Run Text="Smart Scan ("/><Run Foreground="Green" Text="Recommended"/><Run Text=")"/></TextBlock>
+                    </RadioButton>
+                    <TextBlock Margin="15,5,0,0" TextWrapping="Wrap" VerticalAlignment="Top">
+                            <Run Text="It will be"/>
+                            <Run Foreground="Green" Text="faster"/>
+                            <Run Text="than pervious method and you will be"/>
+                            <Run Foreground="Green" Text="99.9% sure"/>
+                            <Run Text=" that all duplicate files are the same."/>
+                    </TextBlock>
+                    <RadioButton  x:Name="fast_scan" Margin="10,15,10,0" Content="Fast Method" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                    <TextBlock Margin="15,5,10,0" TextWrapping="Wrap" VerticalAlignment="Top">
+                            <Run Text="Usually will take just a few moments but it is "/>
+                            <Run Foreground="Red" Text="less reliability" TextDecorations="Underline" />
+                            <Run Text=" about "/>
+                            <Run Foreground="DarkKhaki" Text="80%" TextDecorations="Underline" />
+                            <Run Text="."/>
+                    </TextBlock>
+                    <RadioButton x:Name="file_size_scan" Margin="10,15,10,0" HorizontalAlignment="Left" VerticalAlignment="Top">
+                        <TextBlock><Run Text="Just compare files size ("/><Run Foreground="Red" Text="Not recommended" TextDecorations="Underline"/><Run Text=")"/></TextBlock>
+                    </RadioButton>
+                    <TextBlock Margin="15,5,10,5" TextWrapping="Wrap" VerticalAlignment="Top">
+                            <Run Foreground="Green" Text="Fastest way"/>
+                            <Run Text=" but the "/>
+                            <Run Foreground="Red" Text="worst reliability" TextDecorations="Underline"/>
+                            <Run Text=" about "/>
+                            <Run Foreground="Red" Text="50%" TextDecorations="Underline"/>
+                            <Run Text="."/>
+                    </TextBlock>
+                </StackPanel>
+
+                <StackPanel Margin="10" VerticalAlignment="Top">
+                    <TextBlock Margin="0,0,0,10" Text="Copy to keep conditions" Style="{StaticResource header_textblock}"/>
+                    <ListBox Margin="20,5,75,0" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled" BorderBrush="RoyalBlue" BorderThickness="0,2">
+                        <CheckBox x:Name="file_name" Margin="5" IsChecked="True">
+                            <DockPanel Width="225">
+                                <TextBlock DockPanel.Dock="Left" Text="File name:" Height="15"/>
+                                <ComboBox x:Name="file_name_combo" Margin="10,0" HorizontalAlignment="Right" DockPanel.Dock="Right" SelectedIndex="0" Width="70">
+                                    <ComboBoxItem Content="Longest"/>
+                                    <ComboBoxItem Content="Shortest"/>
+                                </ComboBox>
+                            </DockPanel>
+                        </CheckBox>
+                        <CheckBox  x:Name="file_path" Margin="5" IsChecked="True">
+                            <DockPanel Width="225">
+                                <TextBlock DockPanel.Dock="Left" Text="File path:" Height="15"/>
+                                <ComboBox x:Name="file_path_combo" Margin="10,0" HorizontalAlignment="Right" DockPanel.Dock="Right" SelectedIndex="1" Width="70">
+                                    <ComboBoxItem Content="Longest"/>
+                                    <ComboBoxItem Content="Shortest"/>
+                                </ComboBox>
+                            </DockPanel>
+                        </CheckBox>
+                        <CheckBox x:Name="creating_date" Margin="5" IsChecked="True">
+                            <DockPanel Width="225">
+                                <TextBlock DockPanel.Dock="Left" Text="Creating date:" Height="15"/>
+                                <ComboBox x:Name="creating_date_combo" Margin="10,0" HorizontalAlignment="Right" DockPanel.Dock="Right" SelectedIndex="0" Width="70">
+                                    <ComboBoxItem Content="Recent"/>
+                                    <ComboBoxItem Content="Shortest"/>
+                                </ComboBox>
+                            </DockPanel>
+                        </CheckBox>
+                        <CheckBox x:Name="modified_date" Margin="5" IsChecked="True">
+                            <DockPanel Width="225">
+                                <TextBlock DockPanel.Dock="Left" Text="Last modfied date:" Height="15"/>
+                                <ComboBox x:Name="modified_date_combo" Margin="10,0" HorizontalAlignment="Right" DockPanel.Dock="Right" SelectedIndex="0" Width="70">
+                                    <ComboBoxItem Content="Recent"/>
+                                    <ComboBoxItem Content="oldest"/>
+                                </ComboBox>
+                            </DockPanel>
+                        </CheckBox>
+                        <CheckBox x:Name="name_contains" Margin="5" IsChecked="True">
+                            <DockPanel Width="225">
+                                <TextBlock DockPanel.Dock="Left" Text="name doesn't contains:" Height="15"/>
+                                <TextBox x:Name="name_contains_list" Margin="10,0" HorizontalAlignment="Right" DockPanel.Dock="Right" IsReadOnly="True" Width="70" Text="@#$%^{}">
+                                </TextBox>
+                            </DockPanel>
+                        </CheckBox>
+                    </ListBox>
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+        <DockPanel Height="50" VerticalAlignment="Bottom" Background="#FFEBEBEB">
+            <Button Content="Default" DockPanel.Dock="Left" HorizontalAlignment="Right" Margin="10,10,10,10" Width="80" Background="Transparent" BorderBrush="Green" Foreground="Green" FontFamily="Segoe UI" FontSize="14" BorderThickness="2,1" Click="DefaultButton_Click"/>
+            <Button Content="OK" IsDefault="True" HorizontalAlignment="Right" DockPanel.Dock="Right" Margin="0,10,10,10" Width="80" Background="Transparent" BorderBrush="RoyalBlue" Foreground="RoyalBlue" FontFamily="Segoe UI" FontSize="14" BorderThickness="2,1" Click="SaveButton_Click"/>
+            <Button Content="Cancel" IsCancel="True" DockPanel.Dock="Right"  HorizontalAlignment="Right" Margin="0,10,10,10" Width="80" Background="Transparent" BorderBrush="Tomato" Foreground="Tomato" FontFamily="Segoe UI" FontSize="14" BorderThickness="2,1" Click="Cancel_Click"/>
+        </DockPanel>
+    </Grid>
+</Window>

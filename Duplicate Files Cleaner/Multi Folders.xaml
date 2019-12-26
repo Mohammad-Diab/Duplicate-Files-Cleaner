@@ -1,0 +1,49 @@
+﻿<Window x:Class="Duplicate_Files_Cleaner.Multi_Folders"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Duplicate_Files_Cleaner"
+        mc:Ignorable="d"
+        Title="Selcet multi-folders" Height="375" Width="375" WindowStartupLocation="CenterScreen">
+    <Grid>
+        <ListView x:Name="list_of_directories" Margin="10,68,10,10" SelectionChanged="ListOfDirectories_SelectionChanged" SelectionMode="Extended" ItemsSource="{Binding}">
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal" Margin="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                        <Image Source="Assets/Icons/directory.png" Height="22" Width="22" VerticalAlignment="Top" HorizontalAlignment="Left"/>
+                        <TextBlock Margin="5,0,0,0" Text="{Binding Path=FullPath}" HorizontalAlignment="Left" FontSize="14"/>
+                    </StackPanel>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+        <Button ToolTip="Add folder" Margin="10,5,0,0" VerticalAlignment="Top" Click="AddFolder_Click" HorizontalAlignment="Left" Background="{x:Null}">
+            <Image Source="Assets/Icons/add-folder.png" Height="28" Width="28" Stretch="UniformToFill"/>
+        </Button>
+        <Button ToolTip="Clear list" Margin="84,5,0,0" VerticalAlignment="Top" Click="ClearList_Click" HorizontalAlignment="Left" Background="{x:Null}">
+            <Image Source="Assets/Icons/list-clear.png" Height="28" Width="28" Stretch="UniformToFill"/>
+        </Button>
+        <Button x:Name="Done" ToolTip="Done" Margin="0,5,10,0" VerticalAlignment="Top" HorizontalAlignment="Right" Background="{x:Null}" Click="Done_Click">
+            <Image Source="Assets/Icons/done.png" Height="28" Width="28" Stretch="UniformToFill"/>
+        </Button>
+        <Button x:Name="remove_selected" ToolTip="Remove selected files" Margin="47,5,0,0" VerticalAlignment="Top" Click="RemoveSelected_Click" HorizontalAlignment="Left" Background="{x:Null}" IsEnabled="False">
+            <Image Source="Assets/Icons/list-remove.png" Height="28" Width="28" Stretch="UniformToFill"/>
+        </Button>
+        <Button ToolTip="Add folder" Margin="0,42,10,0" VerticalAlignment="Top" Click="AddFolderFromPath_Click" HorizontalAlignment="Right" Background="{x:Null}">
+            <Image Source="Assets/Icons/list-add.png" Height="17" Width="17" Stretch="UniformToFill"/>
+        </Button>
+        <TextBlock x:Name="path_box_label" Margin="12,43,37,0" VerticalAlignment="Top" FontSize="14" Foreground="#FF292929" Opacity="0.5">
+            <TextBlock.Style>
+                <Style TargetType="{x:Type TextBlock}">
+                    <Setter Property="Text" Value=""/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding ElementName=to_add_path, Path=Text}" Value="">
+                            <Setter Property="Text" Value=" You can also put path here, then click on --> [+]" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </TextBlock.Style>
+        </TextBlock>
+        <TextBox x:Name="to_add_path" Margin="10,42,36,0" VerticalAlignment="Top" FontSize="14" Background="Transparent" PreviewKeyUp="Search_PreviewKeyUp"/>
+    </Grid>
+</Window>
