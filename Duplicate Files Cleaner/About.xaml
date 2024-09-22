@@ -21,7 +21,7 @@
         <Grid x:Name="header" Height="155" VerticalAlignment="Top">
             <Rectangle Height="105" Fill="Black" VerticalAlignment="Top"/>
             <Ellipse Fill="#FFEBEBEB" HorizontalAlignment="Left" Height="100" Margin="20,55,0,0" VerticalAlignment="Top" Width="100"/>
-            <TextBlock HorizontalAlignment="Left" Margin="127,66,0,0" TextTrimming="CharacterEllipsis" Text="Duplicate Files Cleaner" FontSize="24" VerticalAlignment="Top" Foreground="White"/>
+            <TextBlock HorizontalAlignment="Left" Margin="127,66,0,0" TextTrimming="CharacterEllipsis" Text="Duplicate Files' Cleaner" FontSize="24" VerticalAlignment="Top" Foreground="White"/>
             <TextBlock HorizontalAlignment="Left" Margin="127,110,0,0" TextTrimming="CharacterEllipsis" Text="Version: 2017.1.1.412" VerticalAlignment="Top" FontSize="24"/>
         </Grid>
 
@@ -30,7 +30,7 @@
 
                 <ScrollViewer x:Name="about" Width="{Binding ElementName=body, Path=ActualWidth, Mode=OneWay}">
                     <StackPanel>
-                        <TextBlock FontSize="14" Margin="10,5,0,0" TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Top"><Run FontSize="14" Text="Duplicate Files Cleaner engine "/><Run FontSize="12" Text="version" /><Run FontSize="14" Text=": "/><Run Text="2.0.0.0" Foreground="#FF404040" /></TextBlock>
+                        <TextBlock FontSize="14" Margin="10,5,0,0" TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Top"><Run FontSize="14" Text="Duplicate Files' Cleaner engine "/><Run FontSize="12" Text="version" /><Run FontSize="14" Text=": "/><Run Text="2.0.0.0" Foreground="#FF404040" /></TextBlock>
                         <TextBlock FontSize="14" Margin="10,5,0,0" TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Top"><Run FontSize="14" Text="Icons "/><Run FontSize="12" Text="version"/><Run FontSize="14" Text=": "/><Run Foreground="#FF404040" Text="1.2.0.0"/></TextBlock>
                         <TextBlock FontSize="14" Margin="10,5,0,0" TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Top"><Run FontSize="14" Text="Modren MessageBox "/><Run FontSize="12" Text="version"/><Run FontSize="14" Text=": "/><Run Foreground="#FF404040" Text="2.0.0.0"/></TextBlock>
                         <TextBlock FontSize="14" Margin="10,5,0,0" TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Top"><Run FontSize="14" Text="Ookii.Dialogs.Wpf "/><Run FontSize="12" Text="version"/><Run FontSize="14" Text=": "/><Run Foreground="#FF404040" Text="1.0.0.0"/></TextBlock>

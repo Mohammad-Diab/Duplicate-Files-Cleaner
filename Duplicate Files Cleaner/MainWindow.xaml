@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:Duplicate_Files_Cleaner"
+        xmlns:local="clr-namespace:Duplicate_Files__Cleaner"
         mc:Ignorable="d"
         Title="Dublicate files' remover" Height="425" Width="600" Closing="Window_Closing" Loaded="Window_Loaded" SizeChanged="Window_SizeChanged">
     <Window.TaskbarItemInfo>
@@ -25,11 +25,11 @@
                     <Button x:Name="find_duplicate" Margin="10,42,0,0" ToolTip="Choose folders to search in" VerticalAlignment="Top" Click="FindDuplicate_Click" Background="{x:Null}" HorizontalAlignment="Left" Height="32" Width="32">
                         <Image Source="Assets/Icons/folder-search.png" Width="26" Height="26" Stretch="Fill"/>
                     </Button>
-                    <DockPanel x:Name="tool_dock" Visibility="Visible" Margin="0,41,49,0" HorizontalAlignment="Right" Width="202" Height="33" VerticalAlignment="Top">
+                    <DockPanel x:Name="tool_dock" Visibility="Collapsed" Margin="0,41,49,0" HorizontalAlignment="Right" Width="202" Height="33" VerticalAlignment="Top">
                         <Button x:Name="clear_list" Margin="2,0" DockPanel.Dock="Right"  ToolTip="Clear list" VerticalAlignment="Top" Click="ClearList_Click" HorizontalAlignment="Right" Background="{x:Null}" Height="32" Width="32">
                             <Image Source="Assets/Icons/list-clear.png" Width="28" Height="28" Stretch="UniformToFill"/>
                         </Button>
-                        <Button x:Name="delete" Margin="2,0" DockPanel.Dock="Right"  ToolTip="Delete selected items" VerticalAlignment="Top" Click="Delete_Click" IsEnabled="False" Background="{x:Null}" HorizontalAlignment="Right" Height="32" Width="32">
+                        <Button x:Name="delete" Margin="2,0" DockPanel.Dock="Right"  ToolTip="Delete selected items" VerticalAlignment="Top" Click="Delete_Click" Background="{x:Null}" HorizontalAlignment="Right" Height="32" Width="32">
                             <Image Source="Assets/Icons/delete.png" Width="28" Height="28" Stretch="UniformToFill"/>
                         </Button>
                         <Button x:Name="select_none" Margin="2,0" DockPanel.Dock="Right"  ToolTip="Select none" VerticalAlignment="Top" Click="SelectNone_Click" Background="{x:Null}" HorizontalAlignment="Right" Height="32" Width="32">

@@ -28,7 +28,7 @@
                 </LinearGradientBrush>
             </Rectangle.Fill>
         </Rectangle>
-        <TextBlock FontFamily="Segoe UI Light" Margin="10,10" HorizontalAlignment="Left" FontSize="24" TextWrapping="Wrap" Text="Duplicate Files Cleaner Settings" VerticalAlignment="Top"/>
+        <TextBlock FontFamily="Segoe UI Light" Margin="10,10" HorizontalAlignment="Left" FontSize="24" TextWrapping="Wrap" Text="Duplicate Files' Cleaner Settings" VerticalAlignment="Top"/>
         <ScrollViewer Margin="0,50">
             <StackPanel>
 

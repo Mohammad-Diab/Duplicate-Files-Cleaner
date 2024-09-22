@@ -61,7 +61,7 @@ namespace Duplicate_Files_Cleaner
             Persent = 0;
             cancel = true;
             Thread.Sleep(500);
-            log.AppendFormat("{0}\t{1}\t{2}:\t{3}{4}", "-i-", DateTime.Now.ToString("yyyy/MM/dd  HH:mm:ss"), "Duplicate Files Cleaner", "Operation canceled by user.", Environment.NewLine);
+            log.AppendFormat("{0}\t{1}\t{2}:\t{3}{4}", "-i-", DateTime.Now.ToString("yyyy/MM/dd  HH:mm:ss"), "Duplicate Files' Cleaner", "Operation canceled by user.", Environment.NewLine);
         }
 
         public List<Duplicate_Group> FindDuplicate(List<string> pathes, int stage, bool hidden_files, bool system_files, bool html_files, bool special_folders, string[] special_folders_list)

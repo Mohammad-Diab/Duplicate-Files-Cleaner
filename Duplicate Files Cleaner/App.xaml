@@ -1,7 +1,7 @@
-﻿<Application x:Class="Duplicate_Files_Cleaner.App"
+﻿<Application x:Class="Duplicate_Files__Cleaner.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:Duplicate_Files_Cleaner"
+             xmlns:local="clr-namespace:Duplicate_Files__Cleaner"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
          

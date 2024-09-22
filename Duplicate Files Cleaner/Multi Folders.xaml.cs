@@ -89,12 +89,12 @@ namespace Duplicate_Files_Cleaner
                 if (isExist == false)
                     list_to_add.Add(new ListItem(path, null));
                 else if (isExist == true)
-                    MessageBox.Show("Directory is already Exist in the list or in a directory in the list!", "Duplicate Files Cleaner", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show("Directory is already Exist in the list or in a directory in the list!", "Duplicate Files' Cleaner", MessageBoxButton.OK, MessageBoxImage.Warning);
                 else
-                    MessageBox.Show("you have first to remove all '" + path + "' suns from the list", "Duplicate Files Cleaner", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show("you have first to remove all '" + path + "' suns from the list", "Duplicate Files' Cleaner", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
             else
-                MessageBox.Show("Path: '" + path + "' has not been found!", "Duplicate Files Cleaner", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Path: '" + path + "' has not been found!", "Duplicate Files' Cleaner", MessageBoxButton.OK, MessageBoxImage.Error);
         }
 
         private void ClearList_Click(object sender, RoutedEventArgs e)

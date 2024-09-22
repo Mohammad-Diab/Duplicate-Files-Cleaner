@@ -13,6 +13,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using Microsoft.VisualBasic.FileIO;
+using System.Threading.Tasks;
 
 namespace Duplicate_Files_Cleaner
 {
@@ -291,67 +292,97 @@ namespace Duplicate_Files_Cleaner
                     if (j.IsChecked && File.Exists(j.File.FullName))
                         files.Add(j.File.FullName);
 
-            
-
-            BackgroundWorker deleter = new BackgroundWorker();
-            deleter.WorkerReportsProgress = true;
-
-            deleter.DoWork += (object send, DoWorkEventArgs args) => 
+            if (files.Count > 0)
             {
 
-            };
+                bool delete = false;
+                if (files.Count > 1)
+                {
+                    delete = MessageBox.Show(string.Format("Are you sure you want to permanently delete these {0} items", files.Count), "Delete Files", MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) == MessageBoxResult.Yes;
+                }
+                else
+                {
+                    delete = MessageBox.Show(string.Format("Are you sure you want to permanently delete '{0}'", files[0]), "Delete Files", MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) == MessageBoxResult.Yes;
+                }
 
-            deleter.ProgressChanged += (object send, ProgressChangedEventArgs args) =>
+                if (delete)
+                {
+
+                    BackgroundWorker deleter = new BackgroundWorker();
+                    deleter.WorkerReportsProgress = true;
+
+                    current_action.Text = "Deleteing Files...";
+                    int progress = 0;
+                    int errors = 0;
+                    int total = files.Count;
+
+                    deleter.DoWork += (object send, DoWorkEventArgs args) =>
+                    {
+                        Task delete_Task = new Task(() =>
+                        {
+                            foreach (string i in files)
+                                if (File.Exists(i))
+                                    try
+                                    {
+                                        FileSystem.DeleteFile(i, UIOption.OnlyErrorDialogs, RecycleOption.SendToRecycleBin);
+                                        progress += 1;
+                                    }
+                                    catch (Exception) {
+                                        errors += 1;
+                                    }
+                                else
+                                {
+                                    errors += 1;
+                                }
+                        });
+                        delete_Task.Start();
+                        do
+                        {
+                            Thread.Sleep(50);
+                            deleter.ReportProgress(0);
+                        }
+                        while (delete_Task.Status == TaskStatus.Running);
+                    };
+
+                    deleter.ProgressChanged += (object send, ProgressChangedEventArgs args) =>
+                    {
+                        double p = (Math.Round(1.0 * progress / total) * 100);
+                        progress_text.Text = p.ToString("0.0%");
+                        progressbar.Value = p / 100;
+                    };
+
+                    deleter.RunWorkerCompleted += (object send, RunWorkerCompletedEventArgs args) =>
+                    {
+                        for (int i = duplicate_data.Count - 1; i > -1; i--)
+                        {
+                            for (int j = duplicate_data[i].Duplicats.Count - 1; j > -1; j--)
+                                if (duplicate_data[i].Duplicats[j].IsChecked && !File.Exists(duplicate_data[i].Duplicats[j].FullPath))
+                                { duplicate_data[i].Duplicats.RemoveAt(j); duplicate_data[i].cheched_count--; }
+                            if (duplicate_data[i].Duplicats.Count < 2)
+                                duplicate_data.RemoveAt(i);
+                            else
+                                duplicate_data[i].FullPath = duplicate_data[i].Duplicats.Count + " duplicat" + (duplicate_data[i].Duplicats.Count == 1 ? "" : "s");
+                        }
+                        item_group_viewer.Items.Refresh();
+                        item_viewer.Items.Refresh();
+                        if(errors > 0)
+                        {
+                            MessageBox.Show(String.Format("Files deleted done. Found {0} errros", errors), "", MessageBoxButton.OK, MessageBoxImage.Information);
+                        }
+                        else
+                        {
+                            MessageBox.Show("Files deleted done.", "", MessageBoxButton.OK, MessageBoxImage.Information);
+                        }
+                    };
+
+                    deleter.RunWorkerAsync();
+
+                }
+            }
+            else
             {
-
-            };
-
-            deleter.RunWorkerCompleted += (object send, RunWorkerCompletedEventArgs args) =>
-            {
-
-            };
-
-            deleter.RunWorkerAsync();
-
-            //StringBuilder items_name = new StringBuilder();
-            //foreach (var i in dublicate_data)
-            //    foreach (var j in i.Dublicats)
-            //        if (j.IsChecked)
-            //        {
-            //            files.Add(new FileOperationItem(new FileInfo(j.FullPath), false, ""));
-            //            items_name.AppendLine(j.FullPath);
-            //        }
-            //if (files.Count > 0)
-            //{
-            //    bool delete = false;
-            //    if (files.Count > 1)
-            //    {
-            //        if (Messages.ShowMessage(string.Format("Are you sure you want to permanently delete these {0} items", files.Count), ModrenMessageButton.YesNo, ModrenMessageImage.Delete, ModrenMessageSound.Question, true, items_name.ToString()) == MyMessageBoxResult.Yes)
-            //            delete = true;
-            //    }
-            //    else if (files.Count == 1)
-            //        if (Messages.ShowMessage("Are you sure you want to permanently delete these item", ModrenMessageButton.YesNo, ModrenMessageImage.Delete, ModrenMessageSound.Question, true, Messages.GetItemInfo(files[0].Item)) == MyMessageBoxResult.Yes)
-            //            delete = true;
-            //    if (delete)
-            //    {
-            //        new Operation().CopyDialogShow(files, OperationType.Delete, "", true);
-            //        for (int i = dublicate_data.Count - 1; i > -1; i--)
-            //        {
-            //            for (int j = dublicate_data[i].Dublicats.Count - 1; j > -1; j--)
-            //                if (dublicate_data[i].Dublicats[j].IsChecked && !File.Exists(dublicate_data[i].Dublicats[j].FullPath))
-            //                { dublicate_data[i].Dublicats.RemoveAt(j); dublicate_data[i].cheched_count--; }
-            //            if (dublicate_data[i].Dublicats.Count < 2)
-            //                dublicate_data.RemoveAt(i);
-            //            else
-            //                dublicate_data[i].FullPath = dublicate_data[i].Dublicats.Count + " dublicats ";
-            //        }
-            //        number.Text = dublicate_data.Count + " ";
-            //        items_label.Text = dublicate_data.Count > 1 ? "items" : "item";
-            //        MessageBox.Show("Files deleted done.", "", MessageBoxButton.OK, MessageBoxImage.Information);
-            //    }
-            //}
-            //else
-            //    MessageBox.Show("You have not selected any file to delete.", "", MessageBoxButton.OK, MessageBoxImage.Hand);
+                MessageBox.Show("You have not selected any file to delete.", "", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
         }
 
         private void ClearList_Click(object sender, RoutedEventArgs e)
