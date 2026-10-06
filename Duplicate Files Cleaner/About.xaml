@@ -22,7 +22,7 @@
             <Rectangle Height="105" Fill="Black" VerticalAlignment="Top"/>
             <Ellipse Fill="#FFEBEBEB" HorizontalAlignment="Left" Height="100" Margin="20,55,0,0" VerticalAlignment="Top" Width="100"/>
             <TextBlock HorizontalAlignment="Left" Margin="127,66,0,0" TextTrimming="CharacterEllipsis" Text="Duplicate Files Cleaner" FontSize="24" VerticalAlignment="Top" Foreground="White"/>
-            <TextBlock HorizontalAlignment="Left" Margin="127,110,0,0" TextTrimming="CharacterEllipsis" Text="Version: 2017.1.1.412" VerticalAlignment="Top" FontSize="24"/>
+            <TextBlock HorizontalAlignment="Left" Margin="127,110,0,0" TextTrimming="CharacterEllipsis" Text="Version: 2017.2.0" VerticalAlignment="Top" FontSize="24"/>
         </Grid>
 
         <Grid x:Name="body" Margin="0,155,0,42">
@@ -73,7 +73,7 @@
                         </DockPanel>
                         <Rectangle  Height="2" Fill="#FFB8B8B8" Margin="33,10,33,0"/>
                         <TextBlock TextWrapping="Wrap" Margin="10,10,10,0" VerticalAlignment="Top" TextAlignment="Center">
-                            <Run FontSize="12" Text="Copyright © 2017 "/><Run Foreground="#FF404040" FontSize="14" Text="Mohammad Diab"/><Run FontSize="12" Text=". All rights reserved."/>
+                            <Run FontSize="12" Text="Copyright © 2017-2026 "/><Run Foreground="#FF404040" FontSize="14" Text="Mohammad Diab"/><Run FontSize="12" Text=". All rights reserved."/>
                             <LineBreak/>
                             <LineBreak/>
                             <Run Text="--DISCLAIMER--" FontSize="12" Foreground="Red"/>
@@ -95,7 +95,23 @@
                     <Border Margin="20,42,20,5" BorderBrush="#FF404040" BorderThickness="0,1">
                         <ScrollViewer>
                             <StackPanel>
-                                <TextBlock Margin="0,2,0,0" Text="Version 2017.1.1" Height="20" Background="#FFE6E6E6" Foreground="#FF404040" FontWeight="Bold" TextAlignment="Center"/>
+                                <TextBlock Margin="0,2,0,0" Text="Version 2017.2.0" Height="20" Background="#FFE6E6E6" Foreground="#FF404040" FontWeight="Bold" TextAlignment="Center"/>
+                                <Grid Margin="0,5">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="2"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="2"/>
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="10"/>
+                                        <ColumnDefinition Width="35"/>
+                                        <ColumnDefinition Width="1*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Border CornerRadius="5" Background="ForestGreen" Grid.Column="1" Grid.RowSpan="3"/>
+                                    <TextBlock Text="fix" Grid.Column="1" Foreground="WhiteSmoke" TextAlignment="Center" Grid.Row="1" VerticalAlignment="Top" Margin="5,0"/>
+                                    <TextBlock Text="the app name and typos in the interface" FontSize="14" Grid.Column="2" Margin="10,0" Grid.Row="1" TextWrapping="Wrap"/>
+                                </Grid>
+                                <TextBlock Margin="0,15,0,0" Text="Version 2017.1.1" Height="20" Background="#FFE6E6E6" Foreground="#FF404040" FontWeight="Bold" TextAlignment="Center"/>
                                 <Grid Margin="0,5">
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="2"/>
