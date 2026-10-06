@@ -5,7 +5,7 @@ using System.Data;
 using System.Linq;
 using System.Windows;
 
-namespace Duplicate_Files__Cleaner
+namespace Duplicate_Files_Cleaner
 {
     /// <summary>
     /// Interaction logic for App.xaml
