@@ -91,6 +91,62 @@ namespace Duplicate_Files_Cleaner
 
     static class Functions
     {
+        /// <summary>
+        /// The copy to keep in a group, by the "Copy to keep" rules in Settings, applied top to bottom:
+        /// a rule only decides when the rules above it are equal. The first copy wins if all rules are equal.
+        /// </summary>
+        public static FilePath_ListView PickCopyToKeep(List<FilePath_ListView> copies)
+        {
+            if (copies.Count == 0) return null;
+            var s = Properties.Settings.Default;
+            IOrderedEnumerable<FilePath_ListView> order = copies.OrderBy(c => 0);
+            if (s.name_contains && !string.IsNullOrEmpty(s.name_contains_chars))
+                order = order.ThenBy(c => System.IO.Path.GetFileName(c.FullPath).IndexOfAny(s.name_contains_chars.ToCharArray()) > -1 ? 1 : 0);
+            if (s.keep_file_name == 1)
+                order = order.ThenByDescending(c => System.IO.Path.GetFileName(c.FullPath).Length);
+            else if (s.keep_file_name == 2)
+                order = order.ThenBy(c => System.IO.Path.GetFileName(c.FullPath).Length);
+            if (s.keep_file_path == 1)
+                order = order.ThenByDescending(c => (System.IO.Path.GetDirectoryName(c.FullPath) ?? "").Length);
+            else if (s.keep_file_path == 2)
+                order = order.ThenBy(c => (System.IO.Path.GetDirectoryName(c.FullPath) ?? "").Length);
+            if (s.creating_date == 1)
+                order = order.ThenByDescending(c => c.CreationTimeUtc);
+            else if (s.creating_date == 2)
+                order = order.ThenBy(c => c.CreationTimeUtc);
+            if (s.modified_date == 1)
+                order = order.ThenByDescending(c => c.ScanWriteTimeUtc);
+            else if (s.modified_date == 2)
+                order = order.ThenBy(c => c.ScanWriteTimeUtc);
+            return order.First();
+        }
+
+        /// <summary>Only fixed local drives have a Recycle Bin; on USB and network drives Windows deletes for good.</summary>
+        public static bool HasRecycleBin(string path)
+        {
+            try
+            {
+                if (path.StartsWith(@"\\")) return false;
+                return new DriveInfo(System.IO.Path.GetPathRoot(path)).DriveType == DriveType.Fixed;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        public static ScanMode ScanModeFromSettings()
+        {
+            int value = Properties.Settings.Default.scan_quality;
+            return value >= 1 && value <= 4 ? (ScanMode)value : ScanMode.Smart;
+        }
+
+        public static List<string> SplitLines(string text)
+        {
+            return (text ?? "").Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(l => l.Trim()).Where(l => l.Length > 0).ToList();
+        }
+
         public static BitmapImage GetFileImage24(string extension)
         {
             if (extension.ToLower() == "directory")

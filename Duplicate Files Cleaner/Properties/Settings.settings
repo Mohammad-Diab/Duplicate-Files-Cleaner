@@ -47,5 +47,8 @@
     <Setting Name="buffer_size" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">32768</Value>
     </Setting>
+    <Setting Name="recycle_bin" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

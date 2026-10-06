@@ -1,10 +1,9 @@
-﻿using Ookii.Dialogs.Wpf;
+using Ookii.Dialogs.Wpf;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
@@ -12,8 +11,9 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
+using System.Windows.Shell;
+using System.Windows.Threading;
 using Microsoft.VisualBasic.FileIO;
-using System.Threading.Tasks;
 
 namespace Duplicate_Files_Cleaner
 {
@@ -34,11 +34,9 @@ namespace Duplicate_Files_Cleaner
         DuplicateFileRemoverPages CurrentPage { get => current_page; set => current_page = value; }
 
         Duplicate finder = new Duplicate(32768);
+        Duplicate IsSame = new Duplicate(32768);
 
-        bool sun_bridle = true, bridle_father = true, show_message_again = true, starting_window = true;
-        double duplicate_size = 0;
-        double deleted_size = 0;
-        double total_size = 0;
+        bool starting_window = true;
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
@@ -64,13 +62,10 @@ namespace Duplicate_Files_Cleaner
 
         private void Window_Closing(object sender, CancelEventArgs e)
         {
-            if (finder.IsON || IsSame.IsON)
+            if (operation_running)
             {
-                if (MessageBox.Show("Operation is running, Stop it?", "Stop Operation", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
-                {
-                    IsSame.CancelOperation();
-                    finder.CancelOperation();
-                }
+                if (MessageBox.Show("An operation is running. Stop it and close?", "Stop Operation", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                    cancel_operation?.Invoke();
                 else
                     e.Cancel = true;
             }
@@ -86,71 +81,124 @@ namespace Duplicate_Files_Cleaner
 
         private void Setting_Click(object sender, RoutedEventArgs e)
         {
-            new Settings().ShowDialog();
+            new Settings() { Owner = this }.ShowDialog();
         }
 
         private void AboutTool_Click(object sender, RoutedEventArgs e)
         {
-            new About().ShowDialog();
+            new About() { Owner = this }.ShowDialog();
         }
 
         #endregion
 
 
-        #region Checker
+        #region Background operations with progress
 
-        private void Sun_Unchecked(object sender, RoutedEventArgs e)
-        {
-            if (bridle_father)
-                sun_bridle = false;
-            CheckAllSun(duplicate_data[item_group_viewer.SelectedIndex], -1);
-            sun_bridle = true;
-        }
+        bool operation_running;
+        Action cancel_operation;
+        DispatcherTimer progress_timer;
 
-        private void Sun_Checked(object sender, RoutedEventArgs e)
+        /// <summary>
+        /// Runs work on a background thread and shows the progress panel until it ends. done runs on the UI thread.
+        /// </summary>
+        void RunWithProgress(Func<double> percent, Func<bool> indeterminate, Func<string> action, Action cancel, Action work, Action<Exception> done)
         {
-            if (bridle_father)
-                sun_bridle = false;
-            if (duplicate_data[item_group_viewer.SelectedIndex].cheched_count == duplicate_data[item_group_viewer.SelectedIndex].Duplicats.Count - 1)
-                if (show_message_again)
-                {
-                    if (MessageBox.Show("You are about to remove all copies of this file, do you want to do that?", "", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
-                        CheckAllSun(duplicate_data[item_group_viewer.SelectedIndex], 1);
-                    else
-                    {
-                        sun_bridle = true;
-                        bridle_father = false;
-                        (sender as CheckBox).IsChecked = false;
-                        bridle_father = true;
-                    }
-                }
-                else
-                    CheckAllSun(duplicate_data[item_group_viewer.SelectedIndex], 1);
-            else
-                CheckAllSun(duplicate_data[item_group_viewer.SelectedIndex], 1);
-            sun_bridle = true;
-        }
+            operation_running = true;
+            cancel_operation = cancel;
+            progress_grid.Visibility = Visibility.Visible;
+            blur.Radius = 10;
+            current_action.Text = action();
+            UpdateProgress(0, true);
 
-        private void CheckAllSun(DuplicateFiles_ListView d, int dif)
-        {
-            if (!sun_bridle)
+            progress_timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(100) };
+            progress_timer.Tick += (s, a) =>
             {
-                duplicate_data[item_group_viewer.SelectedIndex].cheched_count += dif;
-                deleted_size += dif * duplicate_data[item_group_viewer.SelectedIndex].Size;
-                deleted_grid.Width = (deleted_size / total_size) * total.ActualWidth + 4;
-                deleted_text.Text = Functions.FileSize(deleted_size, 2) + " will be deleted";
-                int count = 0;
-                foreach (var i in d.Duplicats)
-                    if (i.IsChecked) count++;
-                if (count == 0)
-                    d.ChangeIsCheakedValue(false);
-                else if (count == d.Duplicats.Count)
-                    d.ChangeIsCheakedValue(true);
-                else
-                    d.ChangeIsCheakedValue(null);
-                item_group_viewer.Items.Refresh();
-                item_viewer.Items.Refresh();
+                current_action.Text = action();
+                UpdateProgress(percent(), indeterminate());
+            };
+            progress_timer.Start();
+
+            var thread = new Thread(() =>
+            {
+                Exception error = null;
+                try { work(); }
+                catch (Exception ex) { error = ex; }
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    progress_timer.Stop();
+                    UpdateProgress(100, false);
+                    operation_running = false;
+                    cancel_operation = null;
+                    progress_grid.Visibility = Visibility.Collapsed;
+                    blur.Radius = 1;
+                    TaskbarItemInfo.ProgressState = TaskbarItemProgressState.None;
+                    done(error);
+                }));
+            });
+            thread.IsBackground = true;
+            thread.SetApartmentState(ApartmentState.STA);   // the Recycle Bin uses the Windows shell
+            thread.Start();
+        }
+
+        void UpdateProgress(double percent, bool indeterminate)
+        {
+            progressbar.IsIndeterminate = indeterminate;
+            progressbar.Value = percent / 100;
+            progress_text.Text = indeterminate ? "..." : (percent / 100).ToString("0.0%");
+            TaskbarItemInfo.ProgressState = indeterminate ? TaskbarItemProgressState.Indeterminate : TaskbarItemProgressState.Normal;
+            TaskbarItemInfo.ProgressValue = percent / 100;
+        }
+
+        private void CancelOperation_Click(object sender, RoutedEventArgs e)
+        {
+            if (operation_running && cancel_operation != null)
+                if (MessageBox.Show("Do you really want to stop the operation?", "Stop Operation", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                    cancel_operation?.Invoke();
+        }
+
+        #endregion
+
+
+        #region Selection
+
+        private void Group_Click(object sender, RoutedEventArgs e)
+        {
+            var group = (DuplicateFiles_ListView)((CheckBox)sender).DataContext;
+            if (group.Duplicats.Any(d => d.IsChecked))
+                group.SelectNone();
+            else
+                group.SelectAllButKeeper();
+            RefreshSelection();
+        }
+
+        private void Sun_Click(object sender, RoutedEventArgs e)
+        {
+            var box = (CheckBox)sender;
+            var file = (FilePath_ListView)box.DataContext;
+            var group = duplicate_data.FirstOrDefault(g => g.Duplicats.Contains(file));
+            if (group == null) return;
+            if (file.IsChecked && group.Duplicats.All(d => d.IsChecked))
+                if (MessageBox.Show("You are about to remove all copies of this file. Do you want to do that?", "Duplicate Files Cleaner", MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes)
+                    file.IsChecked = false;
+            RefreshSelection();
+        }
+
+        /// <summary>Redraws both lists and the size bar from the current check boxes.</summary>
+        void RefreshSelection()
+        {
+            double total_size = 0, duplicate_size = 0, deleted_size = 0;
+            foreach (var g in duplicate_data)
+            {
+                total_size += g.Size * g.Duplicats.Count;
+                duplicate_size += g.Size * Math.Max(0, g.Duplicats.Count - 1);
+                deleted_size += g.Size * g.Duplicats.Count(d => d.IsChecked);
             }
+            double width = total.ActualWidth;
+            duplicate.Width = total_size > 0 ? Math.Max(0, duplicate_size / total_size * width - 2) : 0;
+            deleted_grid.Width = total_size > 0 ? deleted_size / total_size * width + 4 : 4;
+            deleted_text.Text = Functions.FileSize(deleted_size, 2) + " will be deleted";
+            item_group_viewer.Items.Refresh();
+            item_viewer.Items.Refresh();
         }
 
         #endregion
@@ -231,8 +279,8 @@ namespace Duplicate_Files_Cleaner
                 else if (sender == by_total_size_main_menu)
                     SortBy = DuplicateSortBy.TotalSize;
                 else if (sender == ascrending_menu_item)
-                    if ((int)SortBy < 5)
-                        SortBy += 4;
+                    if ((int)SortBy > 4)
+                        SortBy -= 4;
             }
             else
             {
@@ -245,8 +293,8 @@ namespace Duplicate_Files_Cleaner
                 else if (sender == by_total_size_main_menu)
                     SortBy = DuplicateSortBy.DecTotalSize;
                 else if (sender == ascrending_menu_item)
-                    if ((int)SortBy > 4)
-                        SortBy -= 4;
+                    if ((int)SortBy < 5)
+                        SortBy += 4;
             }
         }
 
@@ -255,134 +303,99 @@ namespace Duplicate_Files_Cleaner
 
         #region Operations
 
+        /// <summary>Selects every copy except the one the "Copy to keep" rules pick in each group.</summary>
         private void SelectAll_Click(object sender, RoutedEventArgs e)
         {
-            duplicate_size = 0;
-            deleted_size = 0;
-            total_size = 0;
             foreach (DuplicateFiles_ListView i in duplicate_data)
-            {
-                i.IsChecked = true;
-                total_size += (i.Size * i.Duplicats.Count);
-                duplicate_size += (i.Size * (i.Duplicats.Count - 1));
-            }
-            item_viewer.Items.Refresh();
-            item_group_viewer.Items.Refresh();
-            deleted_size = duplicate_size;
-            duplicate.Width = (duplicate_size / total_size) * total.ActualWidth - 2;
-            deleted_grid.Width = (deleted_size / total_size) * total.ActualWidth + 4;
-            deleted_text.Text = Functions.FileSize(deleted_size, 2) + " will be deleted";
+                i.SelectAllButKeeper();
+            RefreshSelection();
         }
 
         private void SelectNone_Click(object sender, RoutedEventArgs e)
         {
             foreach (DuplicateFiles_ListView i in duplicate_data)
-                i.IsChecked = false;
-            item_group_viewer.Items.Refresh();
-            item_viewer.Items.Refresh();
-            deleted_grid.Width = 4;
-            deleted_text.Text = "0 byte will be deleted";
+                i.SelectNone();
+            RefreshSelection();
         }
 
         private void Delete_Click(object sender, RoutedEventArgs e)
         {
-            List<string> files = new List<string>();
-            foreach (var i in duplicate_data)
-                foreach (var j in i.Duplicats)
-                    if (j.IsChecked && File.Exists(j.File.FullName))
-                        files.Add(j.File.FullName);
-
-            if (files.Count > 0)
+            var targets = duplicate_data.SelectMany(g => g.Duplicats.Where(d => d.IsChecked)).ToList();
+            if (targets.Count == 0)
             {
+                MessageBox.Show("You have not selected any file to delete.", "Duplicate Files Cleaner", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
 
-                bool delete = false;
-                if (files.Count > 1)
+            bool recycle = Properties.Settings.Default.recycle_bin;
+            string size = Functions.FileSize(targets.Sum(t => (double)t.ScanLength), 2);
+            string what = targets.Count == 1 ? "'" + targets[0].FullPath + "'" : string.Format("these {0} files", targets.Count);
+            string message = recycle
+                ? string.Format("Move {0} ({1}) to the Recycle Bin?", what, size)
+                : string.Format("Permanently delete {0} ({1})?\n\nThis can't be undone.", what, size);
+            int all_copies = duplicate_data.Count(g => g.Duplicats.Count > 0 && g.Duplicats.All(d => d.IsChecked));
+            if (all_copies > 0)
+                message += string.Format("\n\nWarning: in {0} group{1}, all copies are selected, so no copy will be left.", all_copies, all_copies == 1 ? "" : "s");
+            if (MessageBox.Show(message, recycle ? "Move to Recycle Bin" : "Delete Files", MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes)
+                return;
+
+            int done = 0, changed = 0, missing = 0, no_bin = 0;
+            var errors = new List<string>();
+            bool stop = false;
+
+            RunWithProgress(
+                () => 100.0 * (done + changed + missing + no_bin + errors.Count) / targets.Count,
+                () => false,
+                () => recycle ? "Moving files to the Recycle Bin..." : "Deleting files...",
+                () => stop = true,
+                () =>
                 {
-                    delete = MessageBox.Show(string.Format("Are you sure you want to permanently delete these {0} items", files.Count), "Delete Files", MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) == MessageBoxResult.Yes;
-                }
-                else
-                {
-                    delete = MessageBox.Show(string.Format("Are you sure you want to permanently delete '{0}'", files[0]), "Delete Files", MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) == MessageBoxResult.Yes;
-                }
-
-                if (delete)
-                {
-
-                    BackgroundWorker deleter = new BackgroundWorker();
-                    deleter.WorkerReportsProgress = true;
-
-                    current_action.Text = "Deleting files...";
-                    int progress = 0;
-                    int errors = 0;
-                    int total = files.Count;
-
-                    deleter.DoWork += (object send, DoWorkEventArgs args) =>
+                    foreach (var t in targets)
                     {
-                        Task delete_Task = new Task(() =>
+                        if (stop) break;
+                        var file = new FileInfo(t.FullPath);
+                        try
                         {
-                            foreach (string i in files)
-                                if (File.Exists(i))
-                                    try
-                                    {
-                                        FileSystem.DeleteFile(i, UIOption.OnlyErrorDialogs, RecycleOption.SendToRecycleBin);
-                                        progress += 1;
-                                    }
-                                    catch (Exception) {
-                                        errors += 1;
-                                    }
-                                else
-                                {
-                                    errors += 1;
-                                }
-                        });
-                        delete_Task.Start();
-                        do
-                        {
-                            Thread.Sleep(50);
-                            deleter.ReportProgress(0);
-                        }
-                        while (delete_Task.Status == TaskStatus.Running);
-                    };
-
-                    deleter.ProgressChanged += (object send, ProgressChangedEventArgs args) =>
-                    {
-                        double p = (Math.Round(1.0 * progress / total) * 100);
-                        progress_text.Text = p.ToString("0.0%");
-                        progressbar.Value = p / 100;
-                    };
-
-                    deleter.RunWorkerCompleted += (object send, RunWorkerCompletedEventArgs args) =>
-                    {
-                        for (int i = duplicate_data.Count - 1; i > -1; i--)
-                        {
-                            for (int j = duplicate_data[i].Duplicats.Count - 1; j > -1; j--)
-                                if (duplicate_data[i].Duplicats[j].IsChecked && !File.Exists(duplicate_data[i].Duplicats[j].FullPath))
-                                { duplicate_data[i].Duplicats.RemoveAt(j); duplicate_data[i].cheched_count--; }
-                            if (duplicate_data[i].Duplicats.Count < 2)
-                                duplicate_data.RemoveAt(i);
+                            if (!file.Exists) { missing++; continue; }
+                            // Never delete a file that changed after the scan: it may not be a duplicate any more.
+                            if (file.Length != t.ScanLength || file.LastWriteTimeUtc != t.ScanWriteTimeUtc) { changed++; continue; }
+                            if (recycle)
+                            {
+                                // USB and network drives have no Recycle Bin: Windows would delete the file for good.
+                                if (!Functions.HasRecycleBin(file.FullName)) { no_bin++; continue; }
+                                FileSystem.DeleteFile(file.FullName, UIOption.OnlyErrorDialogs, RecycleOption.SendToRecycleBin, UICancelOption.ThrowException);
+                            }
                             else
-                                duplicate_data[i].FullPath = duplicate_data[i].Duplicats.Count + " duplicat" + (duplicate_data[i].Duplicats.Count == 1 ? "" : "s");
+                                file.Delete();
+                            done++;
                         }
-                        item_group_viewer.Items.Refresh();
-                        item_viewer.Items.Refresh();
-                        if(errors > 0)
+                        catch (Exception ex)
                         {
-                            MessageBox.Show(String.Format("Files deleted. {0} errors found.", errors), "", MessageBoxButton.OK, MessageBoxImage.Information);
+                            errors.Add(t.FullPath + "  (" + ex.Message + ")");
                         }
-                        else
-                        {
-                            MessageBox.Show("Files deleted.", "", MessageBoxButton.OK, MessageBoxImage.Information);
-                        }
-                    };
+                    }
+                },
+                error =>
+                {
+                    foreach (var g in duplicate_data)
+                        g.Duplicats.RemoveAll(d => d.IsChecked && !File.Exists(d.FullPath));
+                    duplicate_data.RemoveAll(g => g.Duplicats.Count < 2);
+                    foreach (var g in duplicate_data)
+                        g.UpdateTitle();
+                    if (duplicate_data.Count == 0)
+                        ClearList_Click(null, null);
+                    RefreshSelection();
 
-                    deleter.RunWorkerAsync();
-
-                }
-            }
-            else
-            {
-                MessageBox.Show("You have not selected any file to delete.", "", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
+                    var report = new List<string>();
+                    report.Add(string.Format(recycle ? "{0} file{1} moved to the Recycle Bin." : "{0} file{1} deleted.", done, done == 1 ? "" : "s"));
+                    if (changed > 0) report.Add(string.Format("{0} skipped because they changed after the scan.", changed));
+                    if (missing > 0) report.Add(string.Format("{0} were already gone.", missing));
+                    if (no_bin > 0) report.Add(string.Format("{0} skipped: they are on a USB or network drive, which has no Recycle Bin. Choose \"Delete permanently\" in Settings to remove them.", no_bin));
+                    if (errors.Count > 0) report.Add(string.Format("{0} could not be deleted:\n{1}", errors.Count, string.Join("\n", errors.Take(10).ToArray()) + (errors.Count > 10 ? "\n..." : "")));
+                    if (error != null) report.Add("Error: " + error.Message);
+                    bool problem = changed + missing + no_bin + errors.Count > 0 || error != null;
+                    MessageBox.Show(string.Join("\n\n", report.ToArray()), "Duplicate Files Cleaner", MessageBoxButton.OK, problem ? MessageBoxImage.Warning : MessageBoxImage.Information);
+                });
         }
 
         private void ClearList_Click(object sender, RoutedEventArgs e)
@@ -397,30 +410,31 @@ namespace Duplicate_Files_Cleaner
 
         private void SaveLog_Click(object sender, RoutedEventArgs e)
         {
-            if (finder.Log.Length > 0)
+            string text = last_log;
+            if (text.Length > 0)
             {
                 VistaSaveFileDialog sfd = new VistaSaveFileDialog();
-                sfd.Title = "Select where to save the log:";
+                sfd.Title = "Save the log";
+                sfd.FileName = "Duplicate Files Cleaner " + DateTime.Now.ToString("yyyy-MM-dd HH-mm") + ".log";
                 sfd.AddExtension = true;
-                sfd.Filter = "Log text file (*.log)|*.log";
+                sfd.Filter = "Log file (*.log)|*.log|Text file (*.txt)|*.txt";
                 sfd.CheckPathExists = true;
                 sfd.DefaultExt = ".log";
-                if (sfd.ShowDialog() == true)
+                if (sfd.ShowDialog(this) == true)
                 {
                     try
                     {
-                        StreamWriter sw = new StreamWriter(sfd.OpenFile());
-                        sw.Write(finder.Log);
-                        sw.Close();
+                        File.WriteAllText(sfd.FileName, text, System.Text.Encoding.UTF8);
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show("Can't save the log\n" + ex.Message, "Save Log", MessageBoxButton.OK, MessageBoxImage.Hand);
+                        MessageBox.Show("Can't save the log.\n" + ex.Message, "Save Log", MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                 }
             }
         }
 
+        string last_log = "";
 
         private void ItemGroupViewer_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -431,25 +445,14 @@ namespace Duplicate_Files_Cleaner
 
         private void Item_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            if (item_viewer.SelectedIndex > -1)
+            if (item_viewer.SelectedIndex > -1 && item_group_viewer.SelectedIndex > -1)
                 try { System.Diagnostics.Process.Start(duplicate_data[item_group_viewer.SelectedIndex].Duplicats[item_viewer.SelectedIndex].FullPath); }
-                catch (Exception ex) { MessageBox.Show(ex.Message, "Something went wrong.", MessageBoxButton.OK, MessageBoxImage.Stop); }
+                catch (Exception ex) { MessageBox.Show(ex.Message, "Can't open the file", MessageBoxButton.OK, MessageBoxImage.Error); }
         }
 
         private void Item_PreviewKeyUp(object sender, KeyEventArgs e)
         {
-            if (e.Key == Key.Space)
-            {
-                MessageBox.Show("Amazing feature is coming soon here! :)", "", MessageBoxButton.OK, MessageBoxImage.Information);
-                //    if (File.Exists(dublicate_data[item_group_viewer.SelectedIndex].Dublicats[item_viewer.SelectedIndex].FullPath))
-                //        new Preview().ShowDialog(new FileInfo(dublicate_data[item_group_viewer.SelectedIndex].Dublicats[item_viewer.SelectedIndex].FullPath), ItemType.File);
-                //    if (MainWindow.GoToPath)
-                //    {
-                //        MainWindow.GoToPath = false;
-                //        new MainWindow(MainWindow.to_go_path).ShowDialog();
-                //    }
-            }
-            else if (e.Key == Key.Enter)
+            if (e.Key == Key.Enter)
                 Item_MouseDoubleClick(null, null);
             else if (e.Key == Key.Delete)
                 Delete_Click(delete, null);
@@ -461,116 +464,85 @@ namespace Duplicate_Files_Cleaner
         private void FindDuplicate_Click(object sender, RoutedEventArgs e)
         {
             if (duplicate_data.Count > 0)
-                if (MessageBox.Show("You should clear list before continue, do you want to do that?", "", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                if (MessageBox.Show("The current results will be cleared. Continue?", "Duplicate Files Cleaner", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
                     ClearList_Click(null, null);
 
-            if (duplicate_data.Count == 0)
+            if (duplicate_data.Count > 0)
+                return;
+
+            Settings.FirstRun();
+            Multi_Folders MF = new Multi_Folders() { Owner = this };
+            List<string> paths = new List<string>();
+            tool_dock.Visibility = Visibility.Collapsed;
+            if (MF.ShowDialog(paths) != true)
+                return;
+
+            var s = Properties.Settings.Default;
+            var options = new ScanOptions
             {
-                Settings.FirstRun();
-                Multi_Folders MF = new Multi_Folders();
-                List<string> pathes = new List<string>();
-                tool_dock.Visibility = Visibility.Collapsed;
-                if (MF.ShowDialog(pathes) == true)
+                Mode = Functions.ScanModeFromSettings(),
+                SkipHidden = s.hidden_files,
+                SkipSystem = s.system_files,
+                SkipWebPageFolders = s.html_files,
+                ExcludedFolders = s.special_folder ? Functions.SplitLines(s.special_folder_list) : new List<string>()
+            };
+            finder.BufferSize = s.buffer_size;
+            find_duplicate.IsEnabled = false;
+            log.IsEnabled = false;
+            List<Duplicate_Group> result = new List<Duplicate_Group>();
+
+            RunWithProgress(
+                () => finder.Persent,
+                () => finder.Indeterminate,
+                () => finder.CurrentAction,
+                () => finder.CancelOperation(),
+                () => result = finder.FindDuplicate(paths, options),
+                error =>
                 {
-                    progress_grid.Visibility = Visibility.Visible;
-                    blur.Radius = 10;
-                    List<Duplicate_Group> result = new List<Duplicate_Group>();
-                    find_duplicate.IsEnabled = false;
-                    log.IsEnabled = false;
-                    //delete.IsEnabled = select_all.IsEnabled = select_none.IsEnabled = clear_list.IsEnabled = sort_button.IsEnabled = find_duplicate.IsEnabled = false;
-
-                    BackgroundWorker bw = new BackgroundWorker();
-                    bw.WorkerReportsProgress = true;
-
-                    bw.DoWork += (object send, DoWorkEventArgs args) => 
+                    find_duplicate.IsEnabled = true;
+                    last_log = finder.Log;
+                    log.IsEnabled = last_log.Length > 0;
+                    if (error != null)
                     {
-                        //Thread.Sleep(500);
-                        Thread op_thread = new Thread(() => 
-                        {
-                            result = finder.FindDuplicate(pathes,
-                                Properties.Settings.Default.scan_quality,
-                                Properties.Settings.Default.hidden_files,
-                                Properties.Settings.Default.system_files,
-                                Properties.Settings.Default.html_files,
-                                Properties.Settings.Default.special_folder,
-                                Properties.Settings.Default.special_folder_list.Replace("\r\n", "\n").Replace("\r", "\n").Split("\n".ToCharArray(), StringSplitOptions.RemoveEmptyEntries)
-                                );
-                        });
-                        op_thread.Start();
-                        do
-                        {
-                            Thread.Sleep(50);
-                            bw.ReportProgress(0);
-                        }
-                        while (op_thread.IsAlive);
-                    };
-                    
-                    bw.ProgressChanged += (object send, ProgressChangedEventArgs args) => 
-                    {
-                        current_action.Text = finder.CurrentAction;
-                        progress_text.Text = (Math.Round(finder.Persent, 1) / 100).ToString("0.0%");
-                        progressbar.Value = finder.Persent / 100;
-                    };
+                        MessageBox.Show("The search stopped because of an error.\n" + error.Message, "Duplicate Files Cleaner", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
+                    if (finder.StopOperation)
+                        return;
 
-                    bw.RunWorkerCompleted += (object send, RunWorkerCompletedEventArgs args) =>
+                    foreach (var g in result)
                     {
-                        if (!finder.StopOperation)
-                        {
-                            foreach (var i in result)
-                            {
-                                var item = new DuplicateFiles_ListView();
-                                item.Size = i.Size;
-                                item.FileType = Functions.GetFileType(i.Items[0].File.Extension);
-                                item.FullPath = i.Items.Count + (i.Items.Count == 1 ? " duplicat " : " duplicats");
-                                item.TotalFileSize = Functions.FileSize(i.Size * i.Items.Count, 2);
-                                duplicate_data.Add(item);
-                                foreach (var j in i.Items)
-                                    item.Duplicats.Add(new FilePath_ListView(j.File));
-                            }
-                        }
-                        progressbar.Value = 100;
-                        progress_text.Text = "100%";
-                        find_duplicate.IsEnabled = true;
-                        if (!finder.StopOperation)
-                        {
-                            MessageBox.Show(duplicate_data.Count > 0 ? string.Format("We found {0} item{1}", duplicate_data.Count, duplicate_data.Count > 1 ? "s" : "") : "Congratulations we did not find any duplicates here.", "Search done.", MessageBoxButton.OK, MessageBoxImage.Information);
-                            if (duplicate_data.Count > 0)
-                            {
-                                SelectAll_Click(null, null);
-                                duplicate_data.Sort(Sorter);
-                                progressbar.Value = 0;
-                                flow_shart.Visibility = Visibility.Visible;
-                                tool_dock.Visibility = Visibility.Visible;
-                            }
-                            log.IsEnabled = true;
-                        }
-                        blur.Radius = 1;
-                        progress_grid.Visibility = Visibility.Hidden;
-                        item_group_viewer.Items.Refresh();
-                    };
-                    bw.RunWorkerAsync();
-                }
-            }
-        }
-
-        private void CancelOperation_Click(object sender, RoutedEventArgs e)
-        {
-            if (finder.IsON)
-                if (MessageBox.Show("Do you really want to STOP the operation?", "Stop Operation", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
-                    finder.CancelOperation();
+                        var item = new DuplicateFiles_ListView();
+                        item.Size = g.Size;
+                        item.FileType = Functions.GetFileType(g.Items[0].File.Extension);
+                        item.TotalFileSize = Functions.FileSize(g.Size * g.Items.Count, 2);
+                        foreach (var j in g.Items)
+                            item.Duplicats.Add(new FilePath_ListView(j.File));
+                        item.UpdateTitle();
+                        duplicate_data.Add(item);
+                    }
+                    duplicate_data.Sort(Sorter);
+                    if (duplicate_data.Count > 0)
+                    {
+                        flow_shart.Visibility = Visibility.Visible;
+                        tool_dock.Visibility = Visibility.Visible;
+                        UpdateLayout();
+                        SelectAll_Click(null, null);
+                    }
+                    item_group_viewer.Items.Refresh();
+                    MessageBox.Show(duplicate_data.Count > 0 ? string.Format("Found {0} group{1} of duplicate files.", duplicate_data.Count, duplicate_data.Count > 1 ? "s" : "") : "No duplicate files were found.", "Search done", MessageBoxButton.OK, MessageBoxImage.Information);
+                });
         }
 
 
         #region Is Same Section
 
-        Duplicate IsSame = new Duplicate(32768);
-
         private void Browse_Click(object sender, RoutedEventArgs e)
         {
             VistaOpenFileDialog ofd = new VistaOpenFileDialog();
-            ofd.Title = string.Format("Select the {0} file to compare:", sender == f_browse ? "first" : "second");
+            ofd.Title = string.Format("Select the {0} file to compare", sender == f_browse ? "first" : "second");
             ofd.CheckFileExists = true;
-            if (ofd.ShowDialog() == true)
+            if (ofd.ShowDialog(this) == true)
             {
                 if (sender == f_browse)
                     FillFirstGrid(ofd.FileName);
@@ -646,8 +618,7 @@ namespace Duplicate_Files_Cleaner
                     FileInfo file = new FileInfo(p);
                     f_filename.Text = file.Name;
                     f_filepath.Text = file.FullName;
-                    f_date.Text = "Date: " + file.LastWriteTimeUtc.ToString("yyyy/MM/dd HH:mm:ss");
-                    //f_date.Text = "Date: " + string.Format("{0}/{1}/{2}  ", OrginizeDate(file.LastWriteTimeUtc.Day, 2), OrginizeDate(file.LastWriteTimeUtc.Month, 2), OrginizeDate(file.LastWriteTimeUtc.Year, 4)) + string.Format("{0}:{1}", OrginizeDate(file.LastWriteTimeUtc.Hour, 2), OrginizeDate(file.LastWriteTimeUtc.Minute, 2));
+                    f_date.Text = "Date: " + file.LastWriteTime.ToString("yyyy/MM/dd HH:mm:ss");
                     f_image.Source = Functions.GetFileImage256(file.Extension);
                     f_size.Text = "Size: " + Functions.FileSize(file.Length, 2);
                     f_type.Text = "Type: " + Functions.GetFileType(file.Extension) + (file.Extension.Length > 0 ? string.Format(" ({0})", file.Extension) : string.Empty);
@@ -656,12 +627,11 @@ namespace Duplicate_Files_Cleaner
                 {
                     RestValue(f_grid);
                     f_filepath.Text = "-";
-                    s_filepath.Text = "-";
-                    MessageBox.Show("Something went wrong.\n" + ex.Message, "", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show("Can't read the file.\n" + ex.Message, "Duplicate Files Cleaner", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
             else
-                MessageBox.Show("The two files can't be the same file.", "", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("The two files can't be the same file.", "Duplicate Files Cleaner", MessageBoxButton.OK, MessageBoxImage.Error);
         }
 
         private void FillSecondGrid(string p)
@@ -673,8 +643,7 @@ namespace Duplicate_Files_Cleaner
                     FileInfo file = new FileInfo(p);
                     s_filename.Text = file.Name;
                     s_filepath.Text = file.FullName;
-                    s_date.Text = "Date: " + file.LastWriteTimeUtc.ToString("yyyy/MM/dd HH:mm:ss");
-                    //s_date.Text = "Date: " + string.Format("{0}/{1}/{2}  ", OrginizeDate(file.LastWriteTimeUtc.Day, 2), OrginizeDate(file.LastWriteTimeUtc.Month, 2), OrginizeDate(file.LastWriteTimeUtc.Year, 4)) + string.Format("{0}:{1}", OrginizeDate(file.LastWriteTimeUtc.Hour, 2), OrginizeDate(file.LastWriteTimeUtc.Minute, 2));
+                    s_date.Text = "Date: " + file.LastWriteTime.ToString("yyyy/MM/dd HH:mm:ss");
                     s_image.Source = Functions.GetFileImage256(file.Extension);
                     s_size.Text = "Size: " + Functions.FileSize(file.Length, 2);
                     s_type.Text = "Type: " + Functions.GetFileType(file.Extension) + (file.Extension.Length > 0 ? string.Format(" ({0})", file.Extension) : string.Empty);
@@ -682,13 +651,12 @@ namespace Duplicate_Files_Cleaner
                 catch (Exception ex)
                 {
                     RestValue(s_grid);
-                    f_filepath.Text = "-";
                     s_filepath.Text = "-";
-                    MessageBox.Show("Something went wrong.\n" + ex.Message, "", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show("Can't read the file.\n" + ex.Message, "Duplicate Files Cleaner", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
             else
-                MessageBox.Show("The two files can't be the same file.", "", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("The two files can't be the same file.", "Duplicate Files Cleaner", MessageBoxButton.OK, MessageBoxImage.Error);
         }
 
         private void RestValue(Grid grid)
@@ -713,146 +681,52 @@ namespace Duplicate_Files_Cleaner
 
         private void Compare_Click(object sender, RoutedEventArgs e)
         {
-            if (File.Exists(f_filepath.Text))
+            if (!File.Exists(f_filepath.Text))
             {
-                if (File.Exists(s_filepath.Text))
-                {
-                    progress_grid.Visibility = Visibility.Visible;
-                    blur.Radius = 10;
-                    FileInfo first = new FileInfo(s_filepath.Text);
-                    FileInfo second = new FileInfo(f_filepath.Text);
-                    IsSameResult result = IsSameResult.Unknown;
-                    //log.IsEnabled = false;
-                    BackgroundWorker bw = new BackgroundWorker();
-                    bw.WorkerReportsProgress = true;
-                    
-                    bw.DoWork += (object send, DoWorkEventArgs args) =>
-                    {
-                        Thread op_thread = new Thread(() =>
-                        {
-                            result = IsSame.IsSame(first, second, Properties.Settings.Default.scan_quality);
-                        });
-                        op_thread.Start();
-                        do
-                        {
-                            Thread.Sleep(50);
-                            bw.ReportProgress(0);
-                        }
-                        while (op_thread.IsAlive);
-                    };
-
-                    bw.ProgressChanged += (object send, ProgressChangedEventArgs args) =>
-                    {
-                        current_action.Text = IsSame.CurrentAction;
-                        progress_text.Text = (Math.Round(IsSame.Persent, 1) / 100).ToString("0.0%");
-                        progressbar.Value = IsSame.Persent / 100;
-                    };
-
-                    bw.RunWorkerCompleted += (object send, RunWorkerCompletedEventArgs args) =>
-                    {
-                        progressbar.Value = 100;
-                        progress_text.Text = "100%";
-                        if (!IsSame.StopOperation)
-                        {
-                            if (result == IsSameResult.Same)
-                            {
-                                MessageBox.Show("Files are equal.", "", MessageBoxButton.OK, MessageBoxImage.Information);
-                                if (!first.Extension.Equals(second.Extension, StringComparison.OrdinalIgnoreCase))
-                                        //if (MessageBox.Show("Files seem have deferent extention, do you want to run 'Super extention changer' to detemenate what is the correct extention?", "Something is wrong.", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
-                                        MessageBox.Show("Amazing feature is coming soon here! ;)", "", MessageBoxButton.OK, MessageBoxImage.Information);
-                            }
-                            else if (result == IsSameResult.NotSame)
-                                MessageBox.Show("Files are not equal.", "", MessageBoxButton.OK, MessageBoxImage.Error);
-                            else if (result != IsSameResult.Canceled)
-                                MessageBox.Show("Something went wrong.", "", MessageBoxButton.OK, MessageBoxImage.Error);
-                                //log.IsEnabled = true;
-                            }
-                        progressbar.Value = 0;
-                        progress_grid.Visibility = Visibility.Collapsed;
-                        blur.Radius = 1;
-                    };
-
-                    bw.RunWorkerAsync();
-                }
-                else if (s_filepath.Text != "-" && s_filepath.Text != "")
-                    MessageBox.Show(string.Format("The file '{0}' does not exist.", s_filepath.Text), "", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(f_filepath.Text != "-" && f_filepath.Text != "" ? string.Format("The file '{0}' does not exist.", f_filepath.Text) : "Choose the first file.", "Duplicate Files Cleaner", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
             }
-            else if (f_filepath.Text != "-" && f_filepath.Text != "")
-                MessageBox.Show(string.Format("The file '{0}' does not exist.", f_filepath.Text), "", MessageBoxButton.OK, MessageBoxImage.Error);
-        }
+            if (!File.Exists(s_filepath.Text))
+            {
+                MessageBox.Show(s_filepath.Text != "-" && s_filepath.Text != "" ? string.Format("The file '{0}' does not exist.", s_filepath.Text) : "Choose the second file.", "Duplicate Files Cleaner", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
 
-        
+            FileInfo first = new FileInfo(f_filepath.Text);
+            FileInfo second = new FileInfo(s_filepath.Text);
+            var mode = Functions.ScanModeFromSettings();
+            IsSame.BufferSize = Properties.Settings.Default.buffer_size;
+            IsSameResult result = IsSameResult.Unknown;
+
+            RunWithProgress(
+                () => IsSame.Persent,
+                () => IsSame.Indeterminate,
+                () => IsSame.CurrentAction,
+                () => IsSame.CancelOperation(),
+                () => result = IsSame.IsSame(first, second, mode),
+                error =>
+                {
+                    if (error != null)
+                        MessageBox.Show("The comparison stopped because of an error.\n" + error.Message, "Duplicate Files Cleaner", MessageBoxButton.OK, MessageBoxImage.Error);
+                    else if (result == IsSameResult.Same)
+                        MessageBox.Show(mode == ScanMode.SizeOnly || mode == ScanMode.Sample
+                            ? "The files look identical (checked with the \"" + (mode == ScanMode.SizeOnly ? "size only" : "fast") + "\" scan mode)."
+                            : "The files are identical.", "Compare", MessageBoxButton.OK, MessageBoxImage.Information);
+                    else if (result == IsSameResult.NotSame)
+                        MessageBox.Show("The files are different.", "Compare", MessageBoxButton.OK, MessageBoxImage.Information);
+                    else if (result == IsSameResult.FileIsNotExist)
+                        MessageBox.Show("One of the files was not found.", "Compare", MessageBoxButton.OK, MessageBoxImage.Error);
+                    else if (result == IsSameResult.CanNotReadFile)
+                        MessageBox.Show("One of the files could not be read.", "Compare", MessageBoxButton.OK, MessageBoxImage.Error);
+                });
+        }
 
         #endregion
 
     }
 
-    class DuplicateFileInfo
-    {
-        internal string fullpath;
-        internal long size;
-        internal FileInfo file;
-
-        internal string SHA1;
-        internal string parts;
-
-        public DuplicateFileInfo() { }
-
-        public DuplicateFileInfo(FileInfo item)
-        {
-            file = item;
-            fullpath = file.FullName;
-            size = file.Length;
-        }
-
-        public int CompateTo(DuplicateFileInfo x)
-        {
-            if (x == null) return -1;
-            if (x.parts.SequenceEqual(parts))
-                return 0;
-            else return -1;
-        }
-    }
-
-    class BasicFileInfo : IComparable
-    {
-        public string name;
-        public string extention;
-        public string fullpath;
-        public long size;
-        public string SHA1;
-
-        public BasicFileInfo(FileInfo file)
-        {
-            name = file.Name;
-            extention = file.Extension;
-            fullpath = file.FullName;
-            size = file.Length;
-        }
-
-        public int CompareTo(object obj)
-        {
-            long s = ((BasicFileInfo)obj).size;
-            if (s > this.size)
-                return 1;
-            else if (s < this.size)
-                return -1;
-            else
-                return 0;
-        }
-
-        internal void SetHash(byte[] p)
-        {
-            StringBuilder h = new StringBuilder();
-            foreach (byte i in p)
-                h.Append(i.ToString());
-            SHA1 = h.ToString();
-        }
-    }
-
     class DuplicateFiles_ListView : ListItem
     {
-        internal int cheched_count = 0;
         long size = 0;
 
         public long Size
@@ -871,41 +745,36 @@ namespace Duplicate_Files_Cleaner
             Image = Functions.GetFileImage24("directory");
         }
 
-        public DuplicateFiles_ListView(string file_type, long size, Point Tag)
+        /// <summary>Checked when all copies are selected, unchecked when none, partly checked otherwise.</summary>
+        public bool? IsChecked
         {
-            Image = Functions.GetFileImage24("directory");
-            FileType = file_type;
-            this.size = size;
-            FileSize = Functions.FileSize(size, 2);
-            Duplicats = new List<FilePath_ListView>();
-            Point = Tag;
-        }
-
-        private bool? is_cheched;
-        public Boolean? IsChecked
-        {
-            get { return is_cheched; }
-            set
+            get
             {
-                if (value.HasValue)
-                {
-                    foreach (var i in Duplicats)
-                        i.IsChecked = value.Value;
-                    if (value.Value)
-                        Duplicats[0].IsChecked = false;
-                    cheched_count = Duplicats.Count - 1;
-                }
-                if (value.Value)
-                    is_cheched = null;
-                else
-                    is_cheched = value;
-                //refresh list view;
+                int count = Duplicats.Count(d => d.IsChecked);
+                if (count == 0) return false;
+                if (count == Duplicats.Count) return true;
+                return null;
             }
+            set { }
         }
 
-        public void ChangeIsCheakedValue(bool? value)
+        public void SelectAllButKeeper()
         {
-            is_cheched = value;
+            var keep = Functions.PickCopyToKeep(Duplicats);
+            foreach (var d in Duplicats)
+                d.IsChecked = d != keep;
+        }
+
+        public void SelectNone()
+        {
+            foreach (var d in Duplicats)
+                d.IsChecked = false;
+        }
+
+        public void UpdateTitle()
+        {
+            FullPath = Duplicats.Count + " copies";
+            TotalFileSize = Functions.FileSize(Size * Duplicats.Count, 2);
         }
 
         List<FilePath_ListView> duplicats;
@@ -914,15 +783,11 @@ namespace Duplicate_Files_Cleaner
         string file_type;
         public string FileType { get => file_type; set => file_type = value; }
 
-
         string total_file_size;
         public string TotalFileSize { get => total_file_size; set => total_file_size = value; }
 
         string file_size;
         public string FileSize { get => file_size; set => file_size = value; }
-
-        Point point;
-        public Point Point { get => point; set => point = value; }
     }
 
     class FilePath_ListView : ListItem
@@ -933,21 +798,22 @@ namespace Duplicate_Files_Cleaner
             File = item;
             IsChecked = false;
             Image = Functions.GetFileImage24(item.Extension);
+            // What the file looked like at scan time; checked again before deleting.
+            ScanLength = item.Length;
+            ScanWriteTimeUtc = item.LastWriteTimeUtc;
+            CreationTimeUtc = item.CreationTimeUtc;
         }
 
-        bool is_checked;
-        public bool IsChecked
-        {
-            get { return is_checked; }
-            set { is_checked = value; }
-        }
+        public bool IsChecked { get; set; }
+        public long ScanLength { get; }
+        public DateTime ScanWriteTimeUtc { get; }
+        public DateTime CreationTimeUtc { get; }
     }
 
     enum DuplicateFileRemoverPages
     {
         DuplicateFind = 1,
-        IsSimeller = 2,
-        WhatsDeferent = 3
+        IsSimilar = 2
     }
 
     enum DuplicateSortBy
@@ -962,186 +828,3 @@ namespace Duplicate_Files_Cleaner
         DecTotalSize = 8
     }
 }
-
-
-//private void FindDuplicate(List<string> _paths)
-//{
-//    List<string> paths = new List<string>();
-//    foreach (string i in _paths)
-//        paths.Add(i);
-//    progressbar.Visibility = Visibility.Visible;
-//    main_grid.IsEnabled = false;
-//    TaskbarItemInfo.ProgressValue = 0;
-
-//    BackgroundWorker find_duplicate = new BackgroundWorker();
-//    find_duplicate.WorkerReportsProgress = true;
-//    find_duplicate.DoWork += (object dw_sender, DoWorkEventArgs dw_e) =>
-//    {
-//        bool first_stage = true;
-//        Thread progress_thread = new Thread(() =>
-//        {
-//            for (int i = 0; i < 126 && first_stage; i++)
-//            {
-//                if (CloseWindow) return;
-//                if (!find_duplicate.IsBusy)
-//                    break;
-//                else
-//                    try
-//                    { if (first_stage) find_duplicate.ReportProgress(0, 0.75); }
-//                    catch (Exception) { }
-//                Thread.Sleep(100);
-//                int sleep_time = i < 100 ? 100 : i < 120 ? 1000 : i < 126 ? 5000 : 10000;
-//            }
-//        });
-//        List<DublicateFileInfo> files = new List<DublicateFileInfo>();
-//        foreach (string i in paths)
-//        {
-//            if (File.Exists(i))
-//            {
-//                FileInfo tmp_file = new FileInfo(i);
-//                files.Add(new DublicateFileInfo() { fullpath = tmp_file.FullName, size = tmp_file.Length, file = tmp_file });
-//            }
-//            else
-//            {
-//                try
-//                { GetAllFiles(files, new DirectoryInfo(i)); }
-//                catch (Exception) { }
-//            }
-//        }
-//        first_stage = false;
-//        find_duplicate.ReportProgress(-1, 25);
-//        files.Sort((x, y) => x.size.CompareTo(y.size));
-//        int start_i = 0, start_k = 0;
-
-//        for (int i = 0; i < files.Count - 1; i++)
-//        {
-//            find_duplicate.ReportProgress(0, 70.0 / files.Count);
-//            start_i = i;
-//            int same_size = 0;
-//            if (files.Count > i + 1 && files[i].size == files[i + 1].size)
-//            {
-//                ReadPartsOF(files[i]);
-//                same_size++;
-//            }
-//            else
-//                continue;
-//            int j;
-//            for (j = i + 1; j < files.Count; j++)
-//            {
-//                if (files[i].size == files[j].size)
-//                {
-//                    ReadPartsOF(files[j]);
-//                    same_size++;
-//                }
-//                else break;
-//            }
-//            if (same_size > 1)
-//            {
-//                List<DublicateFileInfo> small_list = files.GetRange(start_i, same_size);
-//                small_list.Sort((x, y) => x.parts.CompareTo(y.parts));
-//                for (int k = 0; k < small_list.Count - 1; k++)
-//                {
-//                    start_k = k;
-//                    int duplicates = 0;
-//                    if (small_list.Count > k + 1 && small_list[k].parts == small_list[k + 1].parts)
-//                    {
-//                        CalcHash(small_list[k]);
-//                        duplicates++;
-//                    }
-//                    else
-//                        continue;
-//                    int l;
-//                    for (l = k + 1; l < small_list.Count; l++)
-//                    {
-//                        if (small_list[k].parts.Equals(small_list[l].parts))
-//                        {
-//                            CalcHash(small_list[l]);
-//                            duplicates++;
-//                        }
-//                        else break;
-//                    }
-//                    if (duplicates > 1)
-//                    {
-//                        List<DublicateFileInfo> micro_list = small_list.GetRange(start_k, duplicates);
-//                        micro_list.Sort((x, y) =>/* x.SHA1 == null ? -1 : y.SHA1 == null ? 1 : */x.SHA1.CompareTo(y.SHA1));
-//                        for (int m = 0; m < micro_list.Count - 1; m++)
-//                        {
-//                            if (micro_list.Count > m + 1 && micro_list[m].SHA1 == micro_list[m + 1].SHA1)
-//                            {
-//                                find_duplicate.ReportProgress(1);
-//                                find_duplicate.ReportProgress(2, micro_list[m].file);
-//                            }
-//                            else
-//                                continue;
-//                            int n;
-//                            for (n = m + 1; n < micro_list.Count; n++)
-//                                if (micro_list[m].SHA1.Equals(micro_list[n].SHA1))
-//                                    find_duplicate.ReportProgress(2, micro_list[n].file);
-//                                else
-//                                    break;
-//                            m = n - 1;
-//                            find_duplicate.ReportProgress(3);
-//                        }
-//                    }
-//                    k = l - 1;// will be l in for loop
-//                    duplicates = 0;
-//                    //break;
-//                }
-//            }
-//            i = j - 1;
-//            same_size = 0;
-//            //break;
-//        }
-//    };
-
-//    find_duplicate.ProgressChanged += (object bw_sender, ProgressChangedEventArgs bw_e) =>
-//    {
-//        switch (bw_e.ProgressPercentage)
-//        {
-//            case -1:
-//                progressbar.Value = Convert.ToDouble(bw_e.UserState);
-//                TaskbarItemInfo.ProgressValue = progressbar.Value / 100;
-//                break;
-//            case 0:
-//                progressbar.Value += Convert.ToDouble(bw_e.UserState);
-//                TaskbarItemInfo.ProgressValue = progressbar.Value / 100;
-//                break;
-//            case 1:
-//                dublicate_data.Add(new DublicateFiles_ListView());
-//                item_group_viewer.Items.Refresh();
-//                break;
-//            case 2:
-//                dublicate_data[dublicate_data.Count - 1].Duplicats.Add(new FilePath_ListView(((FileInfo)bw_e.UserState)));
-//                break;
-//            case 3:
-//                dublicate_data[dublicate_data.Count - 1].Size = dublicate_data[dublicate_data.Count - 1].Duplicats[0].File.Length;
-//                dublicate_data[dublicate_data.Count - 1].FileType = Functions.GetFileType(dublicate_data[dublicate_data.Count - 1].Duplicats[0].File.Extension);
-//                dublicate_data[dublicate_data.Count - 1].FullPath = dublicate_data[dublicate_data.Count - 1].Duplicats.Count + (dublicate_data[dublicate_data.Count - 1].Duplicats.Count > 1 ? " dublicats " : " dublicat");
-//                dublicate_data[dublicate_data.Count - 1].TotalFileSize = Functions.FileSize(dublicate_data[dublicate_data.Count - 1].Size * dublicate_data[dublicate_data.Count - 1].Duplicats.Count, 2);
-//                break;
-//        }
-//    };
-
-//    find_duplicate.RunWorkerCompleted += (object bw_sender, RunWorkerCompletedEventArgs bw_e) =>
-//    {
-//        if (!CloseWindow)
-//        {
-//            main_grid.IsEnabled = true;
-//            SelectAll_Click(null, null);
-//            if (dublicate_data.Count > 0)
-//                delete.IsEnabled = select_all.IsEnabled = select_none.IsEnabled = clear_list.IsEnabled = sort_button.IsEnabled = true;
-//            find_dublicate.IsEnabled = true;
-//            items_label.Text = dublicate_data.Count > 1 ? "items" : "item";
-//            number.Text = " " + dublicate_data.Count;
-//            dublicate_data.Sort(Sorter);
-//            item_group_viewer.Items.Refresh();
-//            progressbar.Value = 100;
-//            TaskbarItemInfo.ProgressValue = 100;
-//            MessageBox.Show(dublicate_data.Count > 0 ? string.Format("We found {0} item{1}", dublicate_data.Count, dublicate_data.Count > 1 ? "s" : "") : "Congratulations we did not find any dublicates here.", "Search done.", MessageBoxButton.OK, MessageBoxImage.Information);
-//            TaskbarItemInfo.ProgressValue = 0;
-//            progressbar.Visibility = Visibility.Hidden;
-//            flow_shart.Visibility = Visibility.Visible;
-//        }
-//    };
-//    find_duplicate.RunWorkerAsync();
-//}

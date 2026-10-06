@@ -34,7 +34,8 @@ namespace Duplicate_Files_Cleaner
             Properties.Settings.Default.hidden_files = hidden_files.IsChecked.Value;
             Properties.Settings.Default.html_files = html_files.IsChecked.Value;
             Properties.Settings.Default.special_folder = special_folder.IsChecked.Value;
-            Properties.Settings.Default.buffer_size = buffers[Convert.ToInt32(buffer_slider.Value)];
+            Properties.Settings.Default.buffer_size = buffers[Convert.ToInt32(buffer_slider.Value) - 1];
+            Properties.Settings.Default.recycle_bin = recycle_option.IsChecked == true;
             
             List<string> pathes = new List<string>();
             string excluded_path = "";
@@ -50,13 +51,13 @@ namespace Duplicate_Files_Cleaner
                     int exists = 0;
                     for (int j = pathes.Count - 1; j > -1; j--)
                     {
-                        if (pathes[j].Contains(path))
+                        if (pathes[j].StartsWith(path, StringComparison.OrdinalIgnoreCase))
                         {
                             exists =1;
                             pathes.RemoveAt(j);
                             
                         }
-                        else if (path.Contains(pathes[j]))
+                        else if (path.StartsWith(pathes[j], StringComparison.OrdinalIgnoreCase))
                         {
                             exists = 2;
                             break;
@@ -72,7 +73,7 @@ namespace Duplicate_Files_Cleaner
             foreach (var i in pathes)
                 excluded_path += (i + Environment.NewLine);
 
-            excluded_path = excluded_path.TrimEnd('\r', 'n');
+            excluded_path = excluded_path.TrimEnd('\r', '\n');
 
             Properties.Settings.Default.special_folder_list = excluded_path;
             if (do_full_scan.IsChecked.Value)
@@ -105,7 +106,7 @@ namespace Duplicate_Files_Cleaner
                 Properties.Settings.Default.modified_date = 0;
 
             Properties.Settings.Default.name_contains = name_contains.IsChecked.Value;
-            Properties.Settings.Default.name_contains_chars = new string(name_contains_list.Text.ToCharArray().Distinct().ToArray()); ;
+            Properties.Settings.Default.name_contains_chars = new string(name_contains_list.Text.Where(c => !char.IsWhiteSpace(c)).Distinct().ToArray());
 
             Properties.Settings.Default.Save();
             Close();
@@ -147,8 +148,11 @@ namespace Duplicate_Files_Cleaner
             html_files.IsChecked = Properties.Settings.Default.html_files;
             special_folder.IsChecked = Properties.Settings.Default.special_folder;
 
-            int buffer = buffers.IndexOf(Properties.Settings.Default.buffer_size + 1);
-            buffer_slider.Value = buffer < 1 ? 6 : buffer;
+            int buffer = buffers.IndexOf(Properties.Settings.Default.buffer_size);
+            buffer_slider.Value = buffer < 0 ? 6 : buffer + 1;
+            BufferSlider_ValueChanged(null, new RoutedPropertyChangedEventArgs<double>(0, buffer_slider.Value));
+            recycle_option.IsChecked = Properties.Settings.Default.recycle_bin;
+            permanent_option.IsChecked = !Properties.Settings.Default.recycle_bin;
 
             special_folder_list.Text = "";
             foreach (string i in Properties.Settings.Default.special_folder_list.Split("\r\n".ToCharArray(), StringSplitOptions.RemoveEmptyEntries))
@@ -221,7 +225,7 @@ namespace Duplicate_Files_Cleaner
         private void BufferSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             if (buffer_textblock != null)
-                buffer_textblock.Text = buffers[(int)e.NewValue - 1] / 1024 + " KB";
+                buffer_textblock.Text = Functions.FileSize(buffers[(int)e.NewValue - 1], 0);
         }
     }
 }

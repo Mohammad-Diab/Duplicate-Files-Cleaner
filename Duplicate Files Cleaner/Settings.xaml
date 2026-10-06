@@ -106,8 +106,16 @@
                 </StackPanel>
 
                 <StackPanel Margin="10" VerticalAlignment="Top">
-                    <TextBlock Margin="0,0,0,10" Text="Copy to keep conditions" Style="{StaticResource header_textblock}"/>
+                    <TextBlock Margin="0,0,0,5" Text="Copy to keep" Style="{StaticResource header_textblock}"/>
+                    <TextBlock Margin="10,0,10,5" TextWrapping="Wrap" Foreground="#FF404040" Text="When selecting duplicates, one copy in each group is kept. The rules decide which one, from top to bottom: a rule only counts when the rules above it are equal."/>
                     <ListBox Margin="20,5,75,0" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled" BorderBrush="RoyalBlue" BorderThickness="0,2">
+                        <CheckBox x:Name="name_contains" Margin="5" IsChecked="True">
+                            <DockPanel Width="225">
+                                <TextBlock DockPanel.Dock="Left" Text="Name doesn't contain:" Height="15"/>
+                                <TextBox x:Name="name_contains_list" Margin="10,0" HorizontalAlignment="Right" DockPanel.Dock="Right" Width="70" Text="@#$%^{}">
+                                </TextBox>
+                            </DockPanel>
+                        </CheckBox>
                         <CheckBox x:Name="file_name" Margin="5" IsChecked="True">
                             <DockPanel Width="225">
                                 <TextBlock DockPanel.Dock="Left" Text="File name:" Height="15"/>
@@ -128,30 +136,31 @@
                         </CheckBox>
                         <CheckBox x:Name="creating_date" Margin="5" IsChecked="True">
                             <DockPanel Width="225">
-                                <TextBlock DockPanel.Dock="Left" Text="Creating date:" Height="15"/>
+                                <TextBlock DockPanel.Dock="Left" Text="Created date:" Height="15"/>
                                 <ComboBox x:Name="creating_date_combo" Margin="10,0" HorizontalAlignment="Right" DockPanel.Dock="Right" SelectedIndex="0" Width="70">
-                                    <ComboBoxItem Content="Recent"/>
-                                    <ComboBoxItem Content="Shortest"/>
+                                    <ComboBoxItem Content="Newest"/>
+                                    <ComboBoxItem Content="Oldest"/>
                                 </ComboBox>
                             </DockPanel>
                         </CheckBox>
                         <CheckBox x:Name="modified_date" Margin="5" IsChecked="True">
                             <DockPanel Width="225">
-                                <TextBlock DockPanel.Dock="Left" Text="Last modified date:" Height="15"/>
+                                <TextBlock DockPanel.Dock="Left" Text="Modified date:" Height="15"/>
                                 <ComboBox x:Name="modified_date_combo" Margin="10,0" HorizontalAlignment="Right" DockPanel.Dock="Right" SelectedIndex="0" Width="70">
-                                    <ComboBoxItem Content="Recent"/>
-                                    <ComboBoxItem Content="oldest"/>
+                                    <ComboBoxItem Content="Newest"/>
+                                    <ComboBoxItem Content="Oldest"/>
                                 </ComboBox>
                             </DockPanel>
                         </CheckBox>
-                        <CheckBox x:Name="name_contains" Margin="5" IsChecked="True">
-                            <DockPanel Width="225">
-                                <TextBlock DockPanel.Dock="Left" Text="name doesn't contain:" Height="15"/>
-                                <TextBox x:Name="name_contains_list" Margin="10,0" HorizontalAlignment="Right" DockPanel.Dock="Right" IsReadOnly="True" Width="70" Text="@#$%^{}">
-                                </TextBox>
-                            </DockPanel>
-                        </CheckBox>
                     </ListBox>
+                </StackPanel>
+
+                <StackPanel Margin="10" VerticalAlignment="Top">
+                    <TextBlock Margin="0,0,0,10" Text="When deleting" Style="{StaticResource header_textblock}"/>
+                    <RadioButton x:Name="recycle_option" Margin="10,0,0,0" Content="Move files to the Recycle Bin (recommended)" IsChecked="True"/>
+                    <TextBlock Margin="28,2,10,0" TextWrapping="Wrap" Foreground="#FF404040" Text="You can restore them later. Files on USB and network drives are skipped, because those drives have no Recycle Bin."/>
+                    <RadioButton x:Name="permanent_option" Margin="10,10,0,0" Content="Delete files permanently"/>
+                    <TextBlock Margin="28,2,10,0" TextWrapping="Wrap" Foreground="#FF404040" Text="Frees the space right away, but the files can't be restored."/>
                 </StackPanel>
             </StackPanel>
         </ScrollViewer>

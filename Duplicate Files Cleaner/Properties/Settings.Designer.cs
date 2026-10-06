@@ -202,5 +202,17 @@ namespace Duplicate_Files_Cleaner.Properties {
                 this["buffer_size"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool recycle_bin {
+            get {
+                return ((bool)(this["recycle_bin"]));
+            }
+            set {
+                this["recycle_bin"] = value;
+            }
+        }
     }
 }
