@@ -320,6 +320,13 @@ namespace Duplicate_Files_Cleaner
 
         private void Delete_Click(object sender, RoutedEventArgs e)
         {
+            if (!results_confirmed)
+            {
+                if (MessageBox.Show("These results come from a preview scan and may include files that are not duplicates.\n\nCheck them byte by byte now? Only the real duplicates will stay in the list.", "Preview results", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
+                    ConfirmPreview();
+                return;
+            }
+
             var targets = duplicate_data.SelectMany(g => g.Duplicats.Where(d => d.IsChecked)).ToList();
             if (targets.Count == 0)
             {
@@ -483,7 +490,8 @@ namespace Duplicate_Files_Cleaner
                 Mode = Functions.ScanModeFromSettings(),
                 SkipHidden = s.hidden_files,
                 SkipSystem = s.system_files,
-                SkipWebPageFolders = s.html_files,
+                SkipGenerated = s.skip_generated,
+                GeneratedFolderNames = s.generated_folders.Split(';').Select(n => n.Trim()).Where(n => n.Length > 0).ToList(),
                 ExcludedFolders = s.special_folder ? Functions.SplitLines(s.special_folder_list) : new List<string>()
             };
             finder.BufferSize = s.buffer_size;
@@ -510,27 +518,76 @@ namespace Duplicate_Files_Cleaner
                     if (finder.StopOperation)
                         return;
 
-                    foreach (var g in result)
+                    results_confirmed = !options.IsPreview;
+                    ShowResults(result);
+                    if (duplicate_data.Count == 0)
+                        MessageBox.Show("No duplicate files were found.", "Search done", MessageBoxButton.OK, MessageBoxImage.Information);
+                    else if (results_confirmed)
+                        MessageBox.Show(string.Format("Found {0} group{1} of duplicate files.", duplicate_data.Count, duplicate_data.Count > 1 ? "s" : ""), "Search done", MessageBoxButton.OK, MessageBoxImage.Information);
+                    else
+                        MessageBox.Show(string.Format("Preview: found {0} group{1} of possible duplicates.\n\nThese results are not confirmed and may include files that are not duplicates, so nothing is selected. Press Delete to confirm them with an exact check first.", duplicate_data.Count, duplicate_data.Count > 1 ? "s" : ""), "Search done (preview)", MessageBoxButton.OK, MessageBoxImage.Warning);
+                });
+        }
+
+        List<Duplicate_Group> last_groups = new List<Duplicate_Group>();
+        bool results_confirmed = true;
+
+        void ShowResults(List<Duplicate_Group> groups)
+        {
+            last_groups = groups;
+            duplicate_data.Clear();
+            item_viewer.DataContext = null;
+            foreach (var g in groups)
+            {
+                var item = new DuplicateFiles_ListView();
+                item.Size = g.Size;
+                item.FileType = Functions.GetFileType(g.Items[0].File.Extension);
+                foreach (var j in g.Items)
+                    item.Duplicats.Add(new FilePath_ListView(j.File));
+                item.UpdateTitle();
+                duplicate_data.Add(item);
+            }
+            duplicate_data.Sort(Sorter);
+            bool any = duplicate_data.Count > 0;
+            flow_shart.Visibility = any ? Visibility.Visible : Visibility.Collapsed;
+            tool_dock.Visibility = any ? Visibility.Visible : Visibility.Collapsed;
+            UpdateLayout();
+            if (any && results_confirmed)
+                SelectAll_Click(null, null);
+            else
+                RefreshSelection();
+            if (any && !results_confirmed)
+                deleted_text.Text = "Preview - not confirmed";
+        }
+
+        /// <summary>Runs the exact check on preview results and keeps only the real duplicates.</summary>
+        void ConfirmPreview()
+        {
+            List<Duplicate_Group> confirmed = null;
+            int before = last_groups.Count;
+            var groups = last_groups;
+            RunWithProgress(
+                () => finder.Persent,
+                () => finder.Indeterminate,
+                () => finder.CurrentAction,
+                () => finder.CancelOperation(),
+                () => confirmed = finder.Confirm(groups),
+                error =>
+                {
+                    last_log = finder.Log;
+                    if (error != null || confirmed == null)
                     {
-                        var item = new DuplicateFiles_ListView();
-                        item.Size = g.Size;
-                        item.FileType = Functions.GetFileType(g.Items[0].File.Extension);
-                        item.TotalFileSize = Functions.FileSize(g.Size * g.Items.Count, 2);
-                        foreach (var j in g.Items)
-                            item.Duplicats.Add(new FilePath_ListView(j.File));
-                        item.UpdateTitle();
-                        duplicate_data.Add(item);
+                        if (error != null)
+                            MessageBox.Show("The check stopped because of an error.\n" + error.Message, "Duplicate Files Cleaner", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
                     }
-                    duplicate_data.Sort(Sorter);
-                    if (duplicate_data.Count > 0)
-                    {
-                        flow_shart.Visibility = Visibility.Visible;
-                        tool_dock.Visibility = Visibility.Visible;
-                        UpdateLayout();
-                        SelectAll_Click(null, null);
-                    }
-                    item_group_viewer.Items.Refresh();
-                    MessageBox.Show(duplicate_data.Count > 0 ? string.Format("Found {0} group{1} of duplicate files.", duplicate_data.Count, duplicate_data.Count > 1 ? "s" : "") : "No duplicate files were found.", "Search done", MessageBoxButton.OK, MessageBoxImage.Information);
+                    results_confirmed = true;
+                    ShowResults(confirmed);
+                    int removed_files = groups.Sum(g => g.Items.Count) - confirmed.Sum(g => g.Items.Count);
+                    MessageBox.Show(string.Format("{0} group{1} confirmed as real duplicates.{2}\n\nThe copies to delete are now selected. Press Delete again to delete them.",
+                        confirmed.Count, confirmed.Count == 1 ? "" : "s",
+                        removed_files > 0 ? string.Format("\n{0} file{1} turned out not to be duplicates and were removed from the list.", removed_files, removed_files == 1 ? "" : "s") : ""),
+                        "Exact check done", MessageBoxButton.OK, MessageBoxImage.Information);
                 });
         }
 

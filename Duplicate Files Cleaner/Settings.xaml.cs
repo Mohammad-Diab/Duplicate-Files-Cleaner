@@ -32,7 +32,10 @@ namespace Duplicate_Files_Cleaner
             Properties.Settings.Default.language = language.SelectedIndex;
             Properties.Settings.Default.system_files = system_files.IsChecked.Value;
             Properties.Settings.Default.hidden_files = hidden_files.IsChecked.Value;
-            Properties.Settings.Default.html_files = html_files.IsChecked.Value;
+            Properties.Settings.Default.skip_generated = skip_generated.IsChecked == true;
+            Properties.Settings.Default.generated_folders = string.Join("; ", generated_folders_list.Text
+                .Split(new[] { ';', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(n => n.Trim()).Where(n => n.Length > 0).Distinct(StringComparer.OrdinalIgnoreCase).ToArray());
             Properties.Settings.Default.special_folder = special_folder.IsChecked.Value;
             Properties.Settings.Default.buffer_size = buffers[Convert.ToInt32(buffer_slider.Value) - 1];
             Properties.Settings.Default.recycle_bin = recycle_option.IsChecked == true;
@@ -145,7 +148,8 @@ namespace Duplicate_Files_Cleaner
             language.SelectedIndex = Properties.Settings.Default.language;
             system_files.IsChecked = Properties.Settings.Default.system_files;
             hidden_files.IsChecked = Properties.Settings.Default.hidden_files;
-            html_files.IsChecked = Properties.Settings.Default.html_files;
+            skip_generated.IsChecked = Properties.Settings.Default.skip_generated;
+            generated_folders_list.Text = Properties.Settings.Default.generated_folders;
             special_folder.IsChecked = Properties.Settings.Default.special_folder;
 
             int buffer = buffers.IndexOf(Properties.Settings.Default.buffer_size);

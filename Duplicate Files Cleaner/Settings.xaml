@@ -49,7 +49,9 @@
                     <TextBlock Text="File exploring setting" Margin="0,10,0,0" Style="{StaticResource header_textblock}"/>
                     <CheckBox x:Name="system_files" Content="Exclude 'System' files." HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" IsChecked="True"/>
                     <CheckBox x:Name="hidden_files" Content="Exclude 'Hidden' files." HorizontalAlignment="Left" Margin="10,5,0,0" VerticalAlignment="Top" IsChecked="True"/>
-                    <CheckBox x:Name="html_files" Content="Exclude files in 'HTML Documents Folder'" HorizontalAlignment="Left" Margin="10,5,0,0" VerticalAlignment="Top"/>
+                    <CheckBox x:Name="skip_generated" Content="Skip project and generated folders" HorizontalAlignment="Left" Margin="10,5,0,0" VerticalAlignment="Top" IsChecked="True"/>
+                    <TextBlock Margin="28,2,10,0" TextWrapping="Wrap" Foreground="#FF404040" Text="Folders with these names, and the folder a browser saves next to a web page (page_files). Separate the names with ;"/>
+                    <TextBox x:Name="generated_folders_list" Margin="28,4,10,0" TextWrapping="Wrap" FontSize="12" Background="Transparent" BorderBrush="Gray" BorderThickness="0,1" IsEnabled="{Binding ElementName=skip_generated, Path=IsChecked}"/>
                     <CheckBox x:Name="special_folder" Content="Exclude these Folders" HorizontalAlignment="Left" Margin="10,5,0,0" VerticalAlignment="Top" IsChecked="True"/>
                     <Grid Margin="15,5,10,0" VerticalAlignment="Top">
                         <Grid.RowDefinitions>
@@ -63,46 +65,25 @@
                 </StackPanel>
 
                 <StackPanel Margin="10" VerticalAlignment="Top">
-                    <TextBlock Margin="0,10,0,10" Text="Scan quality" Style="{StaticResource header_textblock}"/>
-                    <RadioButton x:Name="do_full_scan" Margin="10,5,0,0" Content="Do a full files scan" HorizontalAlignment="Left" VerticalAlignment="Top" BorderBrush="#FF737575"/>
-                    <TextBlock Margin="15,5,10,0" TextWrapping="Wrap" VerticalAlignment="Top">
-                            <Run Text="This compares the"/>
-                            <Run Foreground="Green" Text="entire file"/>
-                            <Run Text="with other files. It is a "/>
-                            <Run Foreground="Red" Text="very slow" TextDecorations="Underline"/>
-                            <Run Text=" operation but you will be "/>
-                            <Run Foreground="Green" Text="100% sure"/>
-                            <Run Text="that all duplicate files are the same."/>
-                    </TextBlock>
-                    <RadioButton x:Name="smart_scan" Margin="10,15,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" BorderBrush="#FF737575" IsChecked="True">
-                        <TextBlock><Run Text="Smart Scan ("/><Run Foreground="Green" Text="Recommended"/><Run Text=")"/></TextBlock>
+                    <TextBlock Margin="0,10,0,10" Text="Scan mode" Style="{StaticResource header_textblock}"/>
+                    <RadioButton x:Name="do_full_scan" Margin="10,5,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" BorderBrush="#FF737575" IsChecked="True">
+                        <TextBlock><Run Text="Exact ("/><Run Foreground="Green" Text="recommended"/><Run Text=")"/></TextBlock>
                     </RadioButton>
-                    <TextBlock Margin="15,5,0,0" TextWrapping="Wrap" VerticalAlignment="Top">
-                            <Run Text="It will be"/>
-                            <Run Foreground="Green" Text="faster"/>
-                            <Run Text="than the previous method and you will be"/>
-                            <Run Foreground="Green" Text="99.9% sure"/>
-                            <Run Text=" that all duplicate files are the same."/>
-                    </TextBlock>
-                    <RadioButton  x:Name="fast_scan" Margin="10,15,10,0" Content="Fast Method" HorizontalAlignment="Left" VerticalAlignment="Top"/>
-                    <TextBlock Margin="15,5,10,0" TextWrapping="Wrap" VerticalAlignment="Top">
-                            <Run Text="Usually will take just a few moments but it is "/>
-                            <Run Foreground="Red" Text="less reliable" TextDecorations="Underline" />
-                            <Run Text=" about "/>
-                            <Run Foreground="DarkKhaki" Text="80%" TextDecorations="Underline" />
-                            <Run Text="."/>
-                    </TextBlock>
-                    <RadioButton x:Name="file_size_scan" Margin="10,15,10,0" HorizontalAlignment="Left" VerticalAlignment="Top">
-                        <TextBlock><Run Text="Just compare files size ("/><Run Foreground="Red" Text="Not recommended" TextDecorations="Underline"/><Run Text=")"/></TextBlock>
+                    <TextBlock Margin="28,2,10,0" TextWrapping="Wrap" Foreground="#FF404040" VerticalAlignment="Top"
+                               Text="Compares the files byte by byte. Files are called duplicates only when every byte is the same. Each file is read once, and reading stops as soon as files differ."/>
+                    <RadioButton x:Name="smart_scan" Margin="10,12,0,0" Content="Fingerprint (SHA-512)" HorizontalAlignment="Left" VerticalAlignment="Top" BorderBrush="#FF737575"/>
+                    <TextBlock Margin="28,2,10,0" TextWrapping="Wrap" Foreground="#FF404040" VerticalAlignment="Top"
+                               Text="Compares a SHA-512 fingerprint of each whole file. Two different files getting the same fingerprint is practically impossible. Reads every byte of every candidate, so it is usually not faster than Exact."/>
+                    <RadioButton x:Name="fast_scan" Margin="10,12,10,0" HorizontalAlignment="Left" VerticalAlignment="Top">
+                        <TextBlock><Run Text="Quick preview ("/><Run Foreground="Tomato" Text="not confirmed"/><Run Text=")"/></TextBlock>
                     </RadioButton>
-                    <TextBlock Margin="15,5,10,5" TextWrapping="Wrap" VerticalAlignment="Top">
-                            <Run Foreground="Green" Text="Fastest way"/>
-                            <Run Text=" but the "/>
-                            <Run Foreground="Red" Text="worst reliability" TextDecorations="Underline"/>
-                            <Run Text=" about "/>
-                            <Run Foreground="Red" Text="50%" TextDecorations="Underline"/>
-                            <Run Text="."/>
-                    </TextBlock>
+                    <TextBlock Margin="28,2,10,0" TextWrapping="Wrap" Foreground="#FF404040" VerticalAlignment="Top"
+                               Text="Compares the size and a few bytes from each file. Different files can look the same, for example an edited document or a photo with changed details. The results must be confirmed by an exact check before deleting."/>
+                    <RadioButton x:Name="file_size_scan" Margin="10,12,10,0" HorizontalAlignment="Left" VerticalAlignment="Top">
+                        <TextBlock><Run Text="Size preview ("/><Run Foreground="Tomato" Text="not confirmed"/><Run Text=")"/></TextBlock>
+                    </RadioButton>
+                    <TextBlock Margin="28,2,10,5" TextWrapping="Wrap" Foreground="#FF404040" VerticalAlignment="Top"
+                               Text="Compares the sizes only. Many different files have the same size, so this only shows where duplicates may be. The results must be confirmed before deleting."/>
                 </StackPanel>
 
                 <StackPanel Margin="10" VerticalAlignment="Top">

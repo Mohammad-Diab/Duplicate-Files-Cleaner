@@ -49,13 +49,25 @@ namespace Duplicate_Files_Cleaner.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool html_files {
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool skip_generated {
             get {
-                return ((bool)(this["html_files"]));
+                return ((bool)(this["skip_generated"]));
             }
             set {
-                this["html_files"] = value;
+                this["skip_generated"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("node_modules; .git; .svn; .hg; .vs; .idea; bin; obj; packages; __pycache__; .venv; venv; .gradle; target")]
+        public string generated_folders {
+            get {
+                return ((string)(this["generated_folders"]));
+            }
+            set {
+                this["generated_folders"] = value;
             }
         }
         
@@ -85,7 +97,7 @@ namespace Duplicate_Files_Cleaner.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("3")]
+        [global::System.Configuration.DefaultSettingValueAttribute("4")]
         public byte scan_quality {
             get {
                 return ((byte)(this["scan_quality"]));
