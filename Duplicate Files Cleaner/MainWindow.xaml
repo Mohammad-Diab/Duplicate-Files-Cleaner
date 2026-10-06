@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Duplicate_Files_Cleaner"
         mc:Ignorable="d"
-        Title="Dublicate files' remover" Height="425" Width="600" Closing="Window_Closing" Loaded="Window_Loaded" SizeChanged="Window_SizeChanged">
+        Title="Duplicate Files Cleaner" Height="425" Width="600" Closing="Window_Closing" Loaded="Window_Loaded" SizeChanged="Window_SizeChanged">
     <Window.TaskbarItemInfo>
         <TaskbarItemInfo ProgressValue="{Binding ElementName=progressbar, Path=Value,Mode=OneWay}" ProgressState="Normal"/>
     </Window.TaskbarItemInfo>
@@ -196,7 +196,7 @@
                 </Grid>
             </Grid>
             <Rectangle x:Name="rec" Fill="ForestGreen" HorizontalAlignment="Left" Height="4" Margin="0,32,0,0" VerticalAlignment="Top" Width="142"/>
-            <Button ToolTip="About Duplicate files remover" HorizontalAlignment="Right" VerticalAlignment="Top" Width="36" Height="36" Background="{x:Null}" BorderBrush="{x:Null}" Click="AboutTool_Click">
+            <Button ToolTip="About Duplicate Files Cleaner" HorizontalAlignment="Right" VerticalAlignment="Top" Width="36" Height="36" Background="{x:Null}" BorderBrush="{x:Null}" Click="AboutTool_Click">
                 <Image Stretch="Fill"  Height="28" Width="28"  Source="Assets/Icons/about.png"/>
             </Button>
             <Button ToolTip="Setting" VerticalAlignment="Top" HorizontalAlignment="Right" Background="{x:Null}" Height="36" Width="36" Click="Setting_Click" Margin="0,0,36,0" BorderThickness="0">

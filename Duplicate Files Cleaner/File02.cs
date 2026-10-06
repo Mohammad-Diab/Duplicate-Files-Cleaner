@@ -61,7 +61,7 @@ namespace Duplicate_Files_Cleaner
             Persent = 0;
             cancel = true;
             Thread.Sleep(500);
-            log.AppendFormat("{0}\t{1}\t{2}:\t{3}{4}", "-i-", DateTime.Now.ToString("yyyy/MM/dd  HH:mm:ss"), "Duplicate Files' Cleaner", "Operation canceled by user.", Environment.NewLine);
+            log.AppendFormat("{0}\t{1}\t{2}:\t{3}{4}", "-i-", DateTime.Now.ToString("yyyy/MM/dd  HH:mm:ss"), "Duplicate Files Cleaner", "Operation canceled by user.", Environment.NewLine);
         }
 
         public List<Duplicate_Group> FindDuplicate(List<string> pathes, int stage, bool hidden_files, bool system_files, bool html_files, bool special_folders, string[] special_folders_list)
@@ -73,7 +73,7 @@ namespace Duplicate_Files_Cleaner
             cancel = false;
             pause = false;
 
-            log.AppendFormat("{0}{1}", "Duplicate files' cleaner", Environment.NewLine);
+            log.AppendFormat("{0}{1}", "Duplicate Files Cleaner", Environment.NewLine);
             log.AppendFormat("{0} {1}{2}", "Version:", System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString(), Environment.NewLine);
             log.AppendFormat("{0} {1}{2}", "By:", "Dr.Mohammad@outlook.com", Environment.NewLine);
             log.AppendFormat("{0} {1}{2}", "Operation started at:", DateTime.Now.ToString("yyyy/MM/dd  HH:mm:ss"), Environment.NewLine);
@@ -612,7 +612,7 @@ namespace Duplicate_Files_Cleaner
             cancel = false;
             pause = false;
 
-            log.AppendFormat("{0}{1}", "Duplicate files' cleaner,\tIs Same Tool", Environment.NewLine);
+            log.AppendFormat("{0}{1}", "Duplicate Files Cleaner,\tIs Same Tool", Environment.NewLine);
             log.AppendFormat("{0} {1}{2}", "Version:", System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString(), Environment.NewLine);
             log.AppendFormat("{0} {1}{2}", "By:", "Dr.Mohammad@outlook.com", Environment.NewLine);
             log.AppendFormat("{0} {1}{2}", "Operation started at:", DateTime.Now.ToString("yyyy/MM/dd  HH:mm:ss"), Environment.NewLine);
