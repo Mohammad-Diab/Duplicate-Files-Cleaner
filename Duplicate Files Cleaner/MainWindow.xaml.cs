@@ -311,7 +311,7 @@ namespace Duplicate_Files_Cleaner
                     BackgroundWorker deleter = new BackgroundWorker();
                     deleter.WorkerReportsProgress = true;
 
-                    current_action.Text = "Deleteing Files...";
+                    current_action.Text = "Deleting files...";
                     int progress = 0;
                     int errors = 0;
                     int total = files.Count;
@@ -367,11 +367,11 @@ namespace Duplicate_Files_Cleaner
                         item_viewer.Items.Refresh();
                         if(errors > 0)
                         {
-                            MessageBox.Show(String.Format("Files deleted done. Found {0} errros", errors), "", MessageBoxButton.OK, MessageBoxImage.Information);
+                            MessageBox.Show(String.Format("Files deleted. {0} errors found.", errors), "", MessageBoxButton.OK, MessageBoxImage.Information);
                         }
                         else
                         {
-                            MessageBox.Show("Files deleted done.", "", MessageBoxButton.OK, MessageBoxImage.Information);
+                            MessageBox.Show("Files deleted.", "", MessageBoxButton.OK, MessageBoxImage.Information);
                         }
                     };
 
@@ -440,7 +440,7 @@ namespace Duplicate_Files_Cleaner
         {
             if (e.Key == Key.Space)
             {
-                MessageBox.Show("Amazing feature is comming soon here! :)", "", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show("Amazing feature is coming soon here! :)", "", MessageBoxButton.OK, MessageBoxImage.Information);
                 //    if (File.Exists(dublicate_data[item_group_viewer.SelectedIndex].Dublicats[item_viewer.SelectedIndex].FullPath))
                 //        new Preview().ShowDialog(new FileInfo(dublicate_data[item_group_viewer.SelectedIndex].Dublicats[item_viewer.SelectedIndex].FullPath), ItemType.File);
                 //    if (MainWindow.GoToPath)
@@ -556,7 +556,7 @@ namespace Duplicate_Files_Cleaner
         private void CancelOperation_Click(object sender, RoutedEventArgs e)
         {
             if (finder.IsON)
-                if (MessageBox.Show("Do you relly want to STOP the operation?", "Stop Operation", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                if (MessageBox.Show("Do you really want to STOP the operation?", "Stop Operation", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
                     finder.CancelOperation();
         }
 
@@ -661,7 +661,7 @@ namespace Duplicate_Files_Cleaner
                 }
             }
             else
-                MessageBox.Show("Files cant be same.", "", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("The two files can't be the same file.", "", MessageBoxButton.OK, MessageBoxImage.Error);
         }
 
         private void FillSecondGrid(string p)
@@ -688,7 +688,7 @@ namespace Duplicate_Files_Cleaner
                 }
             }
             else
-                MessageBox.Show("Files cant be same.", "", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("The two files can't be the same file.", "", MessageBoxButton.OK, MessageBoxImage.Error);
         }
 
         private void RestValue(Grid grid)
@@ -759,12 +759,12 @@ namespace Duplicate_Files_Cleaner
                                 MessageBox.Show("Files are equal.", "", MessageBoxButton.OK, MessageBoxImage.Information);
                                 if (!first.Extension.Equals(second.Extension, StringComparison.OrdinalIgnoreCase))
                                         //if (MessageBox.Show("Files seem have deferent extention, do you want to run 'Super extention changer' to detemenate what is the correct extention?", "Something is wrong.", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
-                                        MessageBox.Show("Amazing feature is comming soon here! ;)", "", MessageBoxButton.OK, MessageBoxImage.Information);
+                                        MessageBox.Show("Amazing feature is coming soon here! ;)", "", MessageBoxButton.OK, MessageBoxImage.Information);
                             }
                             else if (result == IsSameResult.NotSame)
                                 MessageBox.Show("Files are not equal.", "", MessageBoxButton.OK, MessageBoxImage.Error);
                             else if (result != IsSameResult.Canceled)
-                                MessageBox.Show("Some thing went wrong.", "", MessageBoxButton.OK, MessageBoxImage.Error);
+                                MessageBox.Show("Something went wrong.", "", MessageBoxButton.OK, MessageBoxImage.Error);
                                 //log.IsEnabled = true;
                             }
                         progressbar.Value = 0;
@@ -775,10 +775,10 @@ namespace Duplicate_Files_Cleaner
                     bw.RunWorkerAsync();
                 }
                 else if (s_filepath.Text != "-" && s_filepath.Text != "")
-                    MessageBox.Show(string.Format("the file '{0}' is not exist", s_filepath.Text), "", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show(string.Format("The file '{0}' does not exist.", s_filepath.Text), "", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             else if (f_filepath.Text != "-" && f_filepath.Text != "")
-                MessageBox.Show(string.Format("the file '{0}' is not exist", f_filepath.Text), "", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(string.Format("The file '{0}' does not exist.", f_filepath.Text), "", MessageBoxButton.OK, MessageBoxImage.Error);
         }
 
         

@@ -155,7 +155,7 @@ namespace Duplicate_Files_Cleaner
                 if (stage > 1)
                 {
                     CurrentAction = "Reading and comparing files phase 1...";
-                    log.AppendFormat("{0}\t{1}\t{2}:\t{3}{4}", "-i-", DateTime.Now.ToString("yyyy/MM/dd  HH:mm:ss"), "Stage 2", "Reading and comparing files phase '1' stated.", Environment.NewLine);
+                    log.AppendFormat("{0}\t{1}\t{2}:\t{3}{4}", "-i-", DateTime.Now.ToString("yyyy/MM/dd  HH:mm:ss"), "Stage 2", "Reading and comparing files phase '1' started.", Environment.NewLine);
 
                     int groups_count = groups.Count;
                     for (int i = groups.Count - 1; i > -1; i--)
@@ -385,7 +385,7 @@ namespace Duplicate_Files_Cleaner
                     GetFiles(dr, groups, indexes, progress, special_folder, options);
             }
             else
-                log.AppendFormat("{0}\t{1}\t{2}:\t'{3}' {4}{5}", "-w-", DateTime.Now.ToString("yyyy/MM/dd  HH:mm:ss"), "Files Explorer", path, "is not exists.", Environment.NewLine);
+                log.AppendFormat("{0}\t{1}\t{2}:\t'{3}' {4}{5}", "-w-", DateTime.Now.ToString("yyyy/MM/dd  HH:mm:ss"), "Files Explorer", path, "does not exist.", Environment.NewLine);
         }
 
         private void GetFiles(DirectoryInfo dirctory, List<Duplicate_Group> groups, List<long> indexes, double progress, Dictionary<string, bool> special_folder, params int[] options)
@@ -440,7 +440,7 @@ namespace Duplicate_Files_Cleaner
                 }
             }
             else
-                log.AppendFormat("{0}\t{1}\t{2}:\t{3} '{4}' {5}{6}", "-e-", DateTime.Now.ToString("yyyy/MM/dd  HH:mm:ss"), "Files Explorer", "folder", dirctory.FullName, "is not exists.", Environment.NewLine);
+                log.AppendFormat("{0}\t{1}\t{2}:\t{3} '{4}' {5}{6}", "-e-", DateTime.Now.ToString("yyyy/MM/dd  HH:mm:ss"), "Files Explorer", "folder", dirctory.FullName, "does not exist.", Environment.NewLine);
 
             Persent += progress;
         }
@@ -513,7 +513,7 @@ namespace Duplicate_Files_Cleaner
             {
                 if (!item.File.Exists)
                 {
-                    log.AppendFormat("{0}\t{1}\t{2}:\t{3} '{4}' {5}{6}", "-e-", DateTime.Now.ToString("yyyy/MM/dd  HH:mm:ss"), "Stage 2", "file", item.File.FullName, "is not exists.", Environment.NewLine);
+                    log.AppendFormat("{0}\t{1}\t{2}:\t{3} '{4}' {5}{6}", "-e-", DateTime.Now.ToString("yyyy/MM/dd  HH:mm:ss"), "Stage 2", "file", item.File.FullName, "does not exist.", Environment.NewLine);
                     return false;
                 }
                 bw = new BinaryReader(item.File.OpenRead());
@@ -556,7 +556,7 @@ namespace Duplicate_Files_Cleaner
             BinaryReader bw = null;
             if (!item.File.Exists)
             {
-                log.AppendFormat("{0}\t{1}\t{2}:\t{3} '{4}' {5}{6}", "-e-", DateTime.Now.ToString("yyyy/MM/dd  HH:mm:ss"), "Stage 3", "file", item.File.FullName, "is not exists.", Environment.NewLine);
+                log.AppendFormat("{0}\t{1}\t{2}:\t{3} '{4}' {5}{6}", "-e-", DateTime.Now.ToString("yyyy/MM/dd  HH:mm:ss"), "Stage 3", "file", item.File.FullName, "does not exist.", Environment.NewLine);
                 return false;
             }
             if (item.File.Length < 51)
@@ -631,7 +631,7 @@ namespace Duplicate_Files_Cleaner
                     Persent = 5;
                     if (stage > 1)
                     {
-                        log.AppendFormat("{0}\t{1}\t{2}:\t{3}{4}", "-i-", DateTime.Now.ToString("yyyy/MM/dd  HH:mm:ss"), "Stage 1", "Reading first file phase '1' stated.", Environment.NewLine);
+                        log.AppendFormat("{0}\t{1}\t{2}:\t{3}{4}", "-i-", DateTime.Now.ToString("yyyy/MM/dd  HH:mm:ss"), "Stage 1", "Reading first file phase '1' started.", Environment.NewLine);
                         var part1 = GetParts(first);
                         if (!part1.HasValue)
                             return FinishIsSame(IsSameResult.Canceled);
@@ -639,7 +639,7 @@ namespace Duplicate_Files_Cleaner
                             return FinishIsSame(IsSameResult.CanNotReadFile);
                         log.AppendFormat("{0}\t{1}\t{2}:\t{3}{4}", "-i-", DateTime.Now.ToString("yyyy/MM/dd  HH:mm:ss"), "Stage 1", "Reading first file phase '1' completed.", Environment.NewLine);
                         Persent = 15;
-                        log.AppendFormat("{0}\t{1}\t{2}:\t{3}{4}", "-i-", DateTime.Now.ToString("yyyy/MM/dd  HH:mm:ss"), "Stage 1", "Reading second file phase '1' stated.", Environment.NewLine);
+                        log.AppendFormat("{0}\t{1}\t{2}:\t{3}{4}", "-i-", DateTime.Now.ToString("yyyy/MM/dd  HH:mm:ss"), "Stage 1", "Reading second file phase '1' started.", Environment.NewLine);
                         var part2 = GetParts(second);
                         if (!part2.HasValue)
                             return FinishIsSame(IsSameResult.Canceled);
@@ -654,7 +654,7 @@ namespace Duplicate_Files_Cleaner
                             if (stage == 3)
                             {
                                 Persent = 35;
-                                log.AppendFormat("{0}\t{1}\t{2}:\t{3}{4}", "-i-", DateTime.Now.ToString("yyyy/MM/dd  HH:mm:ss"), "Stage 2", "Reading first file phase '2' stated.", Environment.NewLine);
+                                log.AppendFormat("{0}\t{1}\t{2}:\t{3}{4}", "-i-", DateTime.Now.ToString("yyyy/MM/dd  HH:mm:ss"), "Stage 2", "Reading first file phase '2' started.", Environment.NewLine);
                                 var hash1 = GetHash(first);
                                 if (!hash1.HasValue)
                                     return FinishIsSame(IsSameResult.Canceled);
@@ -745,15 +745,15 @@ namespace Duplicate_Files_Cleaner
             switch (result)
             {
                 case IsSameResult.Same:
-                    log.AppendFormat("{0}{1}", "These files are same.", Environment.NewLine);
+                    log.AppendFormat("{0}{1}", "These files are the same.", Environment.NewLine);
                     break;
                 case IsSameResult.NotSame:
-                    log.AppendFormat("{0}{1}", "These files aren't same.", Environment.NewLine);
+                    log.AppendFormat("{0}{1}", "These files aren't the same.", Environment.NewLine);
                     break;
                 case IsSameResult.Canceled:
                     break;
                 default:
-                    log.AppendFormat("{0}{1}", "Some thing went wrong.", Environment.NewLine);
+                    log.AppendFormat("{0}{1}", "Something went wrong.", Environment.NewLine);
                     break;
             }
             Persent = 100;

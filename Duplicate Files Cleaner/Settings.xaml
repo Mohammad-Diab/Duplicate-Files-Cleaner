@@ -66,9 +66,9 @@
                     <TextBlock Margin="0,10,0,10" Text="Scan quality" Style="{StaticResource header_textblock}"/>
                     <RadioButton x:Name="do_full_scan" Margin="10,5,0,0" Content="Do a full files scan" HorizontalAlignment="Left" VerticalAlignment="Top" BorderBrush="#FF737575"/>
                     <TextBlock Margin="15,5,10,0" TextWrapping="Wrap" VerticalAlignment="Top">
-                            <Run Text="This will compares"/>
+                            <Run Text="This compares the"/>
                             <Run Foreground="Green" Text="entire file"/>
-                            <Run Text="with other files it will be a "/>
+                            <Run Text="with other files. It is a "/>
                             <Run Foreground="Red" Text="very slow" TextDecorations="Underline"/>
                             <Run Text=" operation but you will be "/>
                             <Run Foreground="Green" Text="100% sure"/>
@@ -80,14 +80,14 @@
                     <TextBlock Margin="15,5,0,0" TextWrapping="Wrap" VerticalAlignment="Top">
                             <Run Text="It will be"/>
                             <Run Foreground="Green" Text="faster"/>
-                            <Run Text="than pervious method and you will be"/>
+                            <Run Text="than the previous method and you will be"/>
                             <Run Foreground="Green" Text="99.9% sure"/>
                             <Run Text=" that all duplicate files are the same."/>
                     </TextBlock>
                     <RadioButton  x:Name="fast_scan" Margin="10,15,10,0" Content="Fast Method" HorizontalAlignment="Left" VerticalAlignment="Top"/>
                     <TextBlock Margin="15,5,10,0" TextWrapping="Wrap" VerticalAlignment="Top">
                             <Run Text="Usually will take just a few moments but it is "/>
-                            <Run Foreground="Red" Text="less reliability" TextDecorations="Underline" />
+                            <Run Foreground="Red" Text="less reliable" TextDecorations="Underline" />
                             <Run Text=" about "/>
                             <Run Foreground="DarkKhaki" Text="80%" TextDecorations="Underline" />
                             <Run Text="."/>
@@ -137,7 +137,7 @@
                         </CheckBox>
                         <CheckBox x:Name="modified_date" Margin="5" IsChecked="True">
                             <DockPanel Width="225">
-                                <TextBlock DockPanel.Dock="Left" Text="Last modfied date:" Height="15"/>
+                                <TextBlock DockPanel.Dock="Left" Text="Last modified date:" Height="15"/>
                                 <ComboBox x:Name="modified_date_combo" Margin="10,0" HorizontalAlignment="Right" DockPanel.Dock="Right" SelectedIndex="0" Width="70">
                                     <ComboBoxItem Content="Recent"/>
                                     <ComboBoxItem Content="oldest"/>
@@ -146,7 +146,7 @@
                         </CheckBox>
                         <CheckBox x:Name="name_contains" Margin="5" IsChecked="True">
                             <DockPanel Width="225">
-                                <TextBlock DockPanel.Dock="Left" Text="name doesn't contains:" Height="15"/>
+                                <TextBlock DockPanel.Dock="Left" Text="name doesn't contain:" Height="15"/>
                                 <TextBox x:Name="name_contains_list" Margin="10,0" HorizontalAlignment="Right" DockPanel.Dock="Right" IsReadOnly="True" Width="70" Text="@#$%^{}">
                                 </TextBox>
                             </DockPanel>

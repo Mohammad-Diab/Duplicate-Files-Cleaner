@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Duplicate_Files_Cleaner"
         mc:Ignorable="d"
-        Title="Selcet multi-folders" Height="375" Width="375" WindowStartupLocation="CenterScreen">
+        Title="Select multiple folders" Height="375" Width="375" WindowStartupLocation="CenterScreen">
     <Grid>
         <ListView x:Name="list_of_directories" Margin="10,68,10,10" SelectionChanged="ListOfDirectories_SelectionChanged" SelectionMode="Extended" ItemsSource="{Binding}">
             <ListView.ItemTemplate>

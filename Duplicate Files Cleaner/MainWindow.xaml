@@ -16,8 +16,8 @@
             </Grid.BitmapEffect>
             <Grid Background="Black" Margin="0,0,0,0" Height="36" VerticalAlignment="Top"></Grid>
             <StackPanel x:Name="tab_panal" Height="36" VerticalAlignment="Top" Orientation="Horizontal" Background="Black">
-                <Label x:Name="label1" Content="FIND DUBLICTES" FontSize="18" Background="White" Cursor="Hand" PreviewMouseLeftButtonUp="TabChange_MouseButtonUp"/>
-                <Label x:Name="label2" Content="IS SIMILER TO" FontSize="18" Foreground="White" Background="Black" Cursor="Hand" PreviewMouseLeftButtonUp="TabChange_MouseButtonUp"/>
+                <Label x:Name="label1" Content="FIND DUPLICATES" FontSize="18" Background="White" Cursor="Hand" PreviewMouseLeftButtonUp="TabChange_MouseButtonUp"/>
+                <Label x:Name="label2" Content="IS SIMILAR TO" FontSize="18" Foreground="White" Background="Black" Cursor="Hand" PreviewMouseLeftButtonUp="TabChange_MouseButtonUp"/>
             </StackPanel>
 
             <Grid x:Name="mother" Margin="0,0,0,0">
@@ -41,12 +41,12 @@
                         <Button x:Name="sort_button" Margin="2,0" DockPanel.Dock="Right" ToolTip="Sort" VerticalAlignment="Top" HorizontalAlignment="Right" Background="{x:Null}" Click="SortBy_Click">
                             <Button.ContextMenu>
                                 <ContextMenu x:Name="sort_by_contextmenu">
-                                    <MenuItem x:Name="by_count_main_menu" Header="by dublicates count" IsCheckable="True" IsChecked="True" Click="SortLists_Click"/>
+                                    <MenuItem x:Name="by_count_main_menu" Header="by duplicates count" IsCheckable="True" IsChecked="True" Click="SortLists_Click"/>
                                     <MenuItem x:Name="by_size_main_menu" Header="by single file size" IsCheckable="True" IsChecked="False" Click="SortLists_Click"/>
                                     <MenuItem x:Name="by_total_size_main_menu" Header="by total files size" IsCheckable="True" IsChecked="False" Click="SortLists_Click"/>
                                     <MenuItem x:Name="by_type_main_menu" Header="by type" IsCheckable="True" IsChecked="False" Click="SortLists_Click"/>
                                     <Separator/>
-                                    <MenuItem x:Name="ascrending_menu_item" Header="Ascrending" IsCheckable="True" IsChecked="True" Click="SortLists_Click"/>
+                                    <MenuItem x:Name="ascrending_menu_item" Header="Ascending" IsCheckable="True" IsChecked="True" Click="SortLists_Click"/>
                                 </ContextMenu>
                             </Button.ContextMenu>
                             <Image Source="Assets/Icons/sort-by.png" Height="28" Width="28" Stretch="UniformToFill"/>
@@ -191,7 +191,7 @@
                         <TextBlock x:Name="s_date" Margin="10,183,10,0" TextTrimming="CharacterEllipsis" Text="-" FontSize="14" VerticalAlignment="Top"/>
                         <Button ToolTip="Select first file" Content="B" Margin="0,0,10,0" VerticalAlignment="Top" HorizontalAlignment="Right" Height="28" Width="28" Background="{x:Null}" Click="Browse_Click"/>
                     </Grid>
-                    <TextBlock HorizontalAlignment="Left" Margin="10,0,0,5" TextWrapping="Wrap" Text="You can drug and drop files or paths." VerticalAlignment="Bottom" TextDecorations="Underline" Foreground="#FF404040"/>
+                    <TextBlock HorizontalAlignment="Left" Margin="10,0,0,5" TextWrapping="Wrap" Text="You can drag and drop files or folders." VerticalAlignment="Bottom" TextDecorations="Underline" Foreground="#FF404040"/>
 
                 </Grid>
             </Grid>
